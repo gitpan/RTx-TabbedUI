@@ -1,0 +1,31 @@
+<TEXTAREA id="<% $Name %>" STYLE="width:630px" COLS=<%$Width%> ROWS=<% $RT::OIN104 ? 3 : 10 %> NAME="<%$Name%>"><& /Elements/Callback, %ARGS &><% $Default %><%$message%><%$signature%></TEXTAREA>
+% if ($RT::OIN104) {
+<SCRIPT><!--
+document.getElementById('<% $Name %>').focus();
+--></SCRIPT>
+% }
+
+<%INIT>
+
+my ($message);
+
+if ($QuoteTransaction) {
+    my $transaction=RT::Transaction->new($session{'CurrentUser'});
+    $transaction->Load($QuoteTransaction);
+    $message=$transaction->Content(Quote => 1);
+}
+
+my $signature = '';
+if ($session{'CurrentUser'}->UserObj->Signature) {
+	$signature = "-- \n".$session{'CurrentUser'}->UserObj->Signature
+	    unless $session{'CurrentUser'}->UserObj->Name eq 'root';
+}
+
+</%INIT>
+<%ARGS>
+$QuoteTransaction => undef
+$Name => 'Content'
+$Default => ''
+$Width => 20
+</%ARGS>
+

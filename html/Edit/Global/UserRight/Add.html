@@ -1,0 +1,69 @@
+%# O'Toole's Commentary on Murphy's Law:
+%# 	Murphy was an optimist.
+<& /Edit/Elements/PopHeader &>
+
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="DoDelete" value="<% $DoDelete %>">
+
+<& /Edit/Elements/PickUsers, Prefix => 'UserRight', %ARGS &>
+<& /Edit/Elements/PopFooter &>
+
+<%INIT>
+if ($Action eq 'Commit') {
+    my $Object = $RT::System;
+
+    if ($Queue) {
+	$Object = RT::Queue->new($session{'CurrentUser'});
+	$Object->Load($Queue) || Abort(loc("Couldn't load queue [_1]",$Queue));
+    }
+    elsif ($Group) {
+	$Object = RT::Group->new($session{'CurrentUser'});
+	$Object->Load($Group) || Abort(loc("Couldn't load group [_1]",$Group));
+    }
+
+    my $List = $session{UserRightList};
+    my $OffList = $session{UserRightOffList};
+
+    # two-phase: first, clean all people's right in OffList
+    # next, add at least rudimentary rights to List.
+    if ($DoDelete) {
+	foreach my $item (@$OffList) {
+	    my $ACLObj = RT::ACL->new($session{'CurrentUser'});
+	    $ACLObj->LimitToObject( $Object );
+	    $ACLObj->LimitToPrincipal( Id => (eval { $item->PrincipalId } || $item) );
+	    foreach my $ace (@{$ACLObj->ItemsArrayRef}) {
+		$ace->Delete;
+	    }
+	}
+    }
+    my $right = (
+	($Object == $RT::System)  ? 'ModifySelf' :
+	(ref($Object) =~ /Queue/) ? 'SeeQueue' :
+	'AdminGroup'
+    );
+    foreach my $item (@$List) {
+	my $ace = RT::ACE->new( $session{CurrentUser} );
+	$ace->Create(
+	    RightName	    => $right,
+	    Object	    => $Object,
+	    PrincipalType   => 'User',
+	    PrincipalId	    => $item->PrincipalId,
+	);
+	# $item->SetGecos(1);
+    }
+    $m->print("<script>opener.location.reload();window.close();</script>");
+    $m->abort;
+}
+
+</%INIT>
+<%ARGS>
+$Show => ''
+$Queue => 0
+$Group => 0
+$Action => ''
+$Begin => 0
+$DoDelete => 1
+</%ARGS>

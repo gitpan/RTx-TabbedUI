@@ -1,0 +1,24 @@
+%# Idaho state law makes it illegal for a man to give his sweetheart a box
+%# of candy weighing less than fifty pounds.
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '35%', loc('Queue Name'),	    sub { $_[0]->Name } ],
+	[ '35%', loc('Ticket Type'),	    sub { $_[0]->Description } ],
+	[ '15%', loc('Delegates'),	    sub {
+	    $ARGS{Delegates}{$_[0]->Id}->UserMembersObj->First->Name
+	} ,"align=center"],
+	[ '15%', loc('Delegates Status'),   sub {
+	    $_[0]->Id ? eval { $ARGS{Delegates}{$_[0]->Id}->Disabled ? loc('Disabled') : loc('Open') } : ''
+	} ,"align=center"],
+    ],
+    Link    => sub {
+	($ARGS{URL} || "?Begin=$Begin&") . "Category=$ARGS{Category}&Queue=" . $_[0]->Id
+    },
+    Size    => 14,
+    Style   => 'height: 380px',
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

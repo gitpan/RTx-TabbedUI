@@ -1,0 +1,66 @@
+%# Any fool can paint a picture, but it takes a wise person to be able to sell it.
+<tr> 
+  <td height="20" colspan="2" style="padding-top: 0">
+<table width="100%" border="0" cellspacing="1" cellpadding="2" class="tableemboss">
+  <TR>
+    <TD VALIGN=TOP WIDTH=50% class="tableTitle">
+      <&|/l&>New Watchers</&>
+    </TD><TD VALIGN=TOP WIDTH=50% class="tableTitle">
+      <&|/l&>Current Watchers</&>
+    </TD>
+  </TR>
+  <TR>
+<TD VALIGN=TOP bgcolor="white" class="poptable" rowspan="3">
+<&|/l&>Find people whose</&><BR>
+<& /Elements/SelectUsers &>
+<input type=submit name="Action-People-OnlySearchForPeople" value="<&|/l&>Go!</&>">
+<BR>
+<&|/l&>Find group whose</&><BR>
+<& /Elements/SelectGroups &>
+<input type=submit name="Action-People-OnlySearchForGroup" value="<&|/l&>Go!</&>">
+
+<& /Ticket/Elements/AddWatchers, Ticket => $Ticket, UserString => $UserString,
+        UserOp => $UserOp, UserField => $UserField,
+	GroupString => $GroupString, GroupOp => $GroupOp,
+	GroupField => $GroupField, PrivilegedOnly => $PrivilegedOnly &> 
+</TD>
+<TD VALIGN=TOP WIDTH=50% bgcolor="white" class="poptable">
+<&|/l&>Owner</&>: <& /Elements/SelectOwner, Name => 'Owner', QueueObj => $Ticket->QueueObj, TicketObj => $Ticket, Default => $Ticket->OwnerObj->Id &>
+</TD>
+</TR>
+<TR><TD VALIGN=TOP class="tableTitle">
+    <&|/l&>Current watchers</&>
+</TD></TR>
+<TR>
+<TD VALIGN=TOP bgcolor="white" class="poptable">
+<i><&|/l&>(Check box to delete)</&></i><br>
+
+<&|/l&>Requestors</&>:
+<& /Ticket/Elements/EditWatchers, TicketObj => $Ticket, Watchers => $Ticket->Requestors &>
+
+<&|/l&>Cc</&>:
+<& /Ticket/Elements/EditWatchers, TicketObj => $Ticket, Watchers => $Ticket->Cc &>
+
+<&|/l&>Administrative Cc</&>:
+<& /Ticket/Elements/EditWatchers, TicketObj => $Ticket, Watchers => $Ticket->AdminCc &>
+
+</TD>
+</TR>
+<TR>
+<TD colspan="2" class="tableTitle">
+    <input type="submit" name="Action-People" value="<&|/l&>Save</&>">
+</TD>
+</TR>
+</TABLE>
+</TD></tr>
+
+<%ARGS>
+$UserField => undef
+$UserOp => undef
+$UserString => undef
+$GroupField => undef
+$GroupOp => undef
+$GroupString => undef
+$PrivilegedOnly => undef
+$Ticket => undef
+</%ARGS>

@@ -1,0 +1,109 @@
+%# No one can make you feel inferior without your consent.
+%#		-- Eleanor Roosevelt
+<& /Edit/Elements/PopHeader, Title => loc('Pick'), $IsWork ? (BG => '#C0EBEB') : () &>
+
+<input type="hidden" name="Queue" value="<% $Queue %>">
+<input type="hidden" name="CurrentUser" value="<% $CurrentUser %>">
+
+<table border="0" cellspacing="0" cellpadding="5" class="poptable" align="center">
+  <tr> 
+      <td height="18"> 
+      <table border="0" cellspacing="2" cellpadding="0" align="center">
+        <tr> 
+          <td> 
+            <select name="Group" style="width:250px" onchange="this.form.submit()">
+              <option value=''>(<&|/l&>Group Name</&>)</option>
+% while (my $g = $Groups->Next) {
+%   my $selected = 'SELECTED' if $Group eq $g->Id;
+                <option <% $selected %> value="<% $g->Id %>"><% $g->Name %></option>
+% }
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <select name="Job" style="width:250px" onchange="this.form.submit()">
+              <option value=''>(<&|/l&>Position Name</&>)</option>
+% foreach my $j (@$Jobs) {
+%   my $selected = 'SELECTED' if $Job eq $J{$j};
+                <option <% $selected %> value="<% $J{$j} %>"><% $j %></option>
+% }
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td> 
+            <select name="User" style="width:250px; height:300px" size="22">
+% while (my $User = $Users->Next) {
+%     next if $Job and $User->val('job') ne $Job;
+		<option value="<% $User->Id %>"><% $User->get('no') %> <% $User->RealName %> <% $User->get('job') %></option>
+% }
+            </select>
+          </td>
+        </tr>
+      </table>
+      </td>
+    </tr>
+  </table>
+
+<& /Edit/Elements/PopFooter &>
+<%INIT>
+
+if ($User) {
+    my $Item = $RT::Nothing;
+    $Item = RT::Queue->new($session{'CurrentUser'});
+    $Item->Load($Queue) or Abort("Cannot load queue $Queue");
+    my $Groups = RT::Groups->new($session{'CurrentUser'});
+    $Groups->LimitToPersonalGroupsFor($CurrentUser);
+
+    my $Delegates;
+    while ( my $Group = $Groups->Next) {
+	$Delegates->{$Group->Name} = $Group;
+    }
+
+    my $Group = $Delegates->{$Item->Id};
+    if (!$Group) {
+	$Group = RT::Group->new($session{'CurrentUser'});
+	$Group->CreatePersonalGroup(
+	    Name        => $Item->Id,
+	    PrincipalId => $CurrentUser,
+        );
+	$Delegates->{$Item->Id} = $Group;
+    }
+
+    $Group->SetDescription($User);
+    foreach my $User (@{$Group->UserMembersObj->ItemsArrayRef}) {
+	$Group->DeleteMember($User->PrincipalId);
+    }
+    $Group->AddMember($User);
+    $m->print("<script>opener.location.reload();window.close();</script>");
+    $m->abort;
+}
+
+my $U = $session{'CurrentUser'}->UserObj;
+my $J = $U->table($U->normalize($U->table('employee'), 'job'));
+my $company = $U->Attribute('Company');
+my %J = map {($_->{job_cname}, $_->{job_id})}
+	grep { !$RT::CompanySpecific or !$company or ($_->{company_id} eq $company) }
+	values %$J;
+my $Jobs;
+@$Jobs = sort keys %J;
+
+my $Groups = RT::Groups->HRMSUserDefinedGroups( $session{'CurrentUser'} );
+
+my $Users = $RT::Nothing;
+if ($Group or $Job) {
+    $Users = RT::Users->new($session{'CurrentUser'});
+    $Users->Limit( FIELD => 'ExternalAuthId', OPERATOR => '!=', VALUE =>'0');
+    $Users->MemberOfGroup($Group) if $Group;
+}
+
+</%INIT>
+<%ARGS>
+$User		=> 0
+$IsWork		=> 0
+$Queue		=> ''
+$Group		=> 0
+$Job		=> 0
+$CurrentUser	=> $session{'CurrentUser'}->UserObj->PrincipalId
+</%ARGS>

@@ -1,0 +1,52 @@
+%# "It's bad luck to be superstitious."
+%# 		-- Andrew W. Mathis
+
+% unless ($Recurse) {
+<table cellpadding=0 cellspacing=0 border=0><tr><td>
+<& /Edit/Elements/Tab, Text => $Text, Recurse => 1 &>
+</td></tr><tr><td>
+% }
+
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+  <tr> 
+% while (my ($k, $v) = splice(@UserTabs, 0, 2)) {
+%   if ($k eq $Text) {
+    <td background="/img/tabLeft.png" width=2><noscript>{</noscript></td>
+    <td align="center" background="/img/tabMiddle.png"><div style="padding: 3px; padding-left: 10px; padding-right: 10px;position:relative;top:2px;color:white"><label><% loc($Text) %></label></div></td>
+    <td background="/img/tabRight.png" width=2><noscript>}</noscript></td>
+%   } else {
+    <td background="/img/tabLeftTop.png" width=2><noscript>{</noscript></td>
+    <td align="center" style="cursor: hand" onclick="javascript:location.href='<% $v %>'" background="/img/tabMiddleTop.png"><a style="color: black" href="<% $v %>"><div style="padding: 3px; padding-left: 10px; padding-right: 10px;position:relative;top:2px;color:black"><% loc($k) %></div></a></td>
+    <td background="/img/tabRightTop.png" width=2><noscript>}</noscript></td>
+%   }
+% }
+  </tr>
+</table>
+% return if $Recurse;
+</td></tr></table>
+
+<a id="skipnav" name="skipnav"></a>
+<%INIT>
+my @UserTabs = (
+'Overview'		    # loc
+    => '/Work/Overview/',
+'New Request'		    # loc
+    => '/Work/Queues/',
+'My Requests'		    # loc
+    => '/Work/Requests/',
+'My Approvals'		    # loc
+    => '/Work/Approvals/',
+'My Tickets'		    # loc
+    => '/Work/Tickets/',
+'Delegates'		    # loc
+    => '/Work/Delegates/',
+'Preferences'		    # loc
+    => "/Work/Preferences/",
+'Search'		    # loc
+    => '/Work/Search/',
+);
+</%INIT>
+<%ARGS>
+$Text
+$Recurse => 0
+</%ARGS>

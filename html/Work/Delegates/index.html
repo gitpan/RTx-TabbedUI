@@ -1,0 +1,135 @@
+%# God isn't dead, he just couldn't find a parking place.
+
+<& /Work/Elements/104Header, Title => 'Delegates' &>
+<table width="100%" border="0" cellspacing="4" cellpadding="0" class="tableEmboss">
+  <tr>
+    <td width="156">&nbsp;</td>
+    <td width="14"><img src="/img/3Dtoolbar.png" width="2" height="20"></td>
+    <td> 
+      <table border="0" cellspacing="2" cellpadding="0" width="594" >
+        <tr>
+	  <td width="270"><&|/l&>Ticket Type</&>
+            <select name="Category" style="width:150px">
+	      <option value=''><&|/l&>All</&></option>
+% foreach my $type (grep length, sort keys %Categories) {
+	      <option <% $Category eq $type and 'selected' %>><% $type %></option>
+% }
+	    </select>
+	    <input type="image" border="0" name="Action-Search" src="/img/Go.png" width="23" height="19" align="middle">
+	  </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td width="65%" align="center" valign="top" height=448>
+      <& List, Prefix => $Prefix, List => $List, Item => $Item, Delegates => $Delegates, Category => $Category &>
+    </td>
+    <td width="3%" align="center">
+      <img src="/img/ArrowLevelGreen.png" width="13" height="25">
+    </td>
+    <td width="32%" valign="top"> 
+      <& Info, Item => $Item, Users => $Users, User => $User, Disabled => $Disabled, Category => $Category, CurrentUser => $CurrentUser &>
+    </td>
+  </tr>
+</table>
+<& /Work/Elements/104Footer &>
+
+<%INIT>
+my %Categories;
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit;
+my $List = [];
+while (my $queue = $Queues->Next) {
+    my $descr = $queue->Description;
+    $Categories{$descr}++ if length $descr;
+    next if length $Category and $descr ne $Category;
+    push @$List, $queue;
+}
+
+my $Item = $RT::Nothing;
+my $Users = [];
+
+# XXX: no longer needed?
+if ($Queue) {
+    $Item = RT::Queue->new($session{'CurrentUser'});
+    $Item->Load($Queue);
+
+=for comment
+    my $users = RT::Users->new($session{'CurrentUser'});
+    $users->Limit( FIELD => 'ExternalAuthId', OPERATOR => '!=', VALUE => '0');
+    $Users = $users->ItemsArrayRef;
+    @$Users = (
+	map { $_->[0] }
+	sort { $a->[1] cmp $b->[1] }
+	map { [ $_ => $_->get('no') ] }
+	@$Users
+    );
+=cut
+}
+
+# XXX - the user below should be currentuser, if not for missing
+#       on legacy code that has wrong companyspecific code. - XXX
+my $Groups = RT::Groups->new($RT::SystemUser);
+$Groups->LimitToPersonalGroupsFor($CurrentUser->PrincipalId);
+
+my $Delegates = {};
+while ( my $Group = $Groups->Next) {
+    $Group->UpdateCompany($session{CurrentUser}->UserObj->Attribute('Company'))
+	if $Group->can('UpdateCompany');
+    $Delegates->{$Group->Name} = $Group;
+}
+
+my $Group = $Delegates->{$Item->Id};
+
+if ($ARGS{'Action-Save'} and $Item) {
+    if (!$Group) {
+	$Group = RT::Group->new($session{'CurrentUser'});
+	$Group->UpdateCompany if $Group->can('UpdateCompany');
+	$Group->CreatePersonalGroup(
+	    Name        => $Item->Id,
+	    PrincipalId => $CurrentUser->PrincipalId,
+        );
+	$Delegates->{$Item->Id} = $Group;
+    }
+
+    if (exists $ARGS{SetDelegate} and 0) {
+	my $Id = $ARGS{SetDelegate};
+	$Group->SetDescription($Id);
+	foreach my $User (@{$Group->UserMembersObj->ItemsArrayRef}) {
+	    $Group->DeleteMember($User->PrincipalId);
+	}
+	$Group->AddMember($Id) if $Id;
+    }
+    if (exists $ARGS{SetDisabled}) {
+	$Group->SetDisabled(1);
+    }
+    elsif (exists $ARGS{SetEnabled}) {
+	$Group->SetDisabled(0);
+    }
+}
+
+my $Disabled = $Group->Disabled if $Group;
+my $User = $RT::Nothing;
+if (my $id = eval { $Group->Description }) {
+    $User = RT::User->new($session{'CurrentUser'});
+    $User->Load( $id );
+    $User = $RT::Nothing unless $User->Id;
+}
+
+return (
+    List => $List, Item => $Item, Delegates => $Delegates, Category => $Category,
+    Prefix => $Prefix, Users => $Users, User => $User, Disabled => $Disabled,
+    Details => !$NoUI,
+) if $NoUI;
+</%INIT>
+<%ARGS>
+$Category	=> ''
+$Begin		=> 0
+$Prefix		=> ''
+$Queue		=> ''
+$NoUI		=> 0
+$CurrentUser	=> $session{'CurrentUser'}->UserObj
+</%ARGS>

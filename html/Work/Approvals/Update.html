@@ -1,0 +1,50 @@
+%# Senate, n.:
+%#	A body of elderly gentlemen charged with high duties and misdemeanors.
+%#		-- Ambrose Bierce
+<& index.html &>
+<%INIT>
+my $Approval = LoadTicket($id);
+my $Ticket = $Approval->OriginObj;
+
+foreach my $key (keys %ARGS) {
+    $key =~ /^AddMoreEntry-(.*)$/ or next;
+    $ARGS{'AddMoreEntry'} = [ split(/-/, $1) ];
+}
+
+my $Entries = $m->comp('/Work/Tickets/Elements/ProcessEntryUpdates', TicketObj => $Ticket, %ARGS);
+$ARGS{"Ticket-".$Ticket->Id."-CustomField-$_-Values"} = $Entries->{$_} foreach keys %{$Entries};
+ProcessTicketCustomFieldUpdates( ARGSRef => \%ARGS );
+
+if ($ARGS{'AddMoreEntry'}) {
+    return $m->comp('Display.html', %ARGS);
+}
+
+if ( length($Content) ) {
+    my $notes = MIME::Entity->build( Data => [ $Content ] );
+    RT::I18N::SetMIMEEntityToUTF8($notes); # convert text parts into utf-8
+    $Approval->Correspond( MIMEObj => $notes, _reopen => 0, _open => 0 );
+}
+
+if ( $Action eq 'deny' ) {
+    $Approval->SetStatus('rejected');
+}
+elsif ( $Action eq 'approve' ) {
+    # XXX - eventually factor this out to RT::Ticket.
+    my @proc = $Approval;
+    while (my $TicketObj = shift(@proc)) {
+	$TicketObj->SetStatus('resolved');
+	my $deps = RT::Tickets->new($session{'CurrentUser'});
+        $deps->LimitStatus(VALUE => 'open');
+        $deps->LimitType(VALUE => 'approval');
+	$deps->LimitDependsOn($TicketObj->Id);
+        $deps->LimitOwner(VALUE => $session{'CurrentUser'}->UserObj->Id);
+	push @proc, @{ $deps->ItemsArrayRef || [] };
+    }
+}
+
+</%INIT>
+<%ARGS>
+$id
+$Action	    => undef
+$Content    => undef
+</%ARGS>

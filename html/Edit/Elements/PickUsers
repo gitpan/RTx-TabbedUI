@@ -1,0 +1,254 @@
+%# If only I could be respected without having to be respectable.
+
+<table border="0" cellspacing="12" cellpadding="0" align="center" class="poptable">
+% $m->print($m->content);
+  <tr> 
+    <td><FIELDSET><LEGEND><&|/l&>Filter people</&></LEGEND>
+    <table border="0" cellspacing="10" cellpadding="0" align="center" width="610">
+      <tr> 
+        <td> 
+          <table border="0" cellspacing="1" cellpadding="0" align="center" >
+        <tr> 
+          <td width="58"><nobr><&|/l&>User Number</&>&nbsp;</nobr></td>
+          <td width="315"> 
+            <input type="text" name="IdMin"  style="width:128px">
+            <&|/l&>to</&> 
+            <input type="text" name="IdMax"  style="width:128px">
+            <&|/l&>number</&></td>
+	  <td width="213">&nbsp;</td>
+        </tr>
+        <tr> 
+          <td><nobr><&|/l&>Chinese Name</&>&nbsp;</nobr></td>
+          <td> 
+            <input type="text" name="Name"  style="width:274px" value="">
+          </td>
+	  <td>&nbsp;</td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Group Name</&></td>
+          <td> 
+            <select name="GroupId" style="width:274px">
+              <option value=''>(<&|/l&>Please Select</&>)</option>
+% foreach my $g (@$GroupList) {
+%   my $selected = 'SELECTED' if $GroupId eq $g->Id;
+                <option <% $selected %> value="<% $g->Id %>"><% $g->Name %></option>
+% }
+            </select>
+          </td>
+	  <td width="213">&nbsp;</td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Position Name</&></td>
+          <td> 
+            <select name="JobId" style="width:274px">
+              <option value=''>(<&|/l&>Please Select</&>)</option>
+% foreach my $j (@$Jobs) {
+%   my $selected = 'SELECTED' if $JobId eq $J{$j};
+                <option <% $selected %> value="<% $J{$j} %>"><% $j %></option>
+% }
+            </select>
+          </td>
+	  <td width="213"> 
+	    <input type="submit" name="Action-Search" value=" <&|/l&>Filter</&> " >
+	  </td>
+        </tr>
+	<tr> 
+	  <td colspan="3"> 
+	    <hr noshade size="1">
+	  </td>
+	</tr>
+	<tr> 
+	  <td colspan="3"> 
+	    <table border="0" cellspacing="0" cellpadding="0" align="center">
+	      <tr> 
+		<td valign="top" width="138"  height="33"> 
+		  <div align="left"> 
+		    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		      <tr> 
+			<td height="13"><&|/l&>Filtered list:</&></td>
+		      </tr>
+		    </table>
+		    <select name="Off" size="6" multiple style="width:250px;height:120px" >
+% if ($Filtered) {
+%      &$init;
+%     @$OffList = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => $_->Name ] } @$OffList );
+% foreach my $Item (@$OffList) {
+		<option value="<% $Item->Id %>"><% $Item->get('no') %> <% $Item->Name %> <% $Item->get('job') %></option>
+% }
+% }
+		    </select>
+		  </div>
+		</td>
+		<& /Edit/Elements/ListButtons &>
+		<td valign="top" height="33" width="134" > 
+		  <div align="right"> 
+		    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		      <tr> 
+			<td height="13"><&|/l&>Selected users:</&></td>
+		      </tr>
+		    </table>
+		    <div align="left"> 
+		      <select name="On" size="6" multiple style="width:250px;height:120px" >
+% foreach my $Item (@$List) {
+		<option value="<% $Item->Id %>"><% $Item->get('no') %> <% $Item->Name %> <% $Item->get('job') %></option>
+% }
+		      </select>
+		    </div>
+		  </div>
+		</td>
+	      </tr>
+	    </table>
+	  </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+% if ($IsWork) {
+<table border="0" cellspacing="0" cellpadding="3" align="center" width="100%">
+  <tr><td>
+<&|/l&>Other comma-delimited email addresses</&>
+  </td></tr>
+  <tr><td>
+<input type="text" name="Extra" value="<% $Extra %>" size="70" style="width:93%">
+  </td></tr>
+</table>
+% }
+
+</td></tr></table>
+
+<%INIT>
+my $List = [ @{$session{"${Prefix}List"}||[]} ];
+my $OffList = [ @{$session{"${Prefix}OffList"}||[]} ];
+
+my $IdFlag;
+if (@$OffList and !ref($OffList->[0])) {
+    $IdFlag = 1;
+
+}
+
+$Extra = $session{"${Prefix}Extra"} unless !$IsWork or exists $ARGS{Extra};
+
+if ($Action eq 'Add' or $Action eq 'AddAll') {
+    # XXX: why is OffList flushed?
+    @Off = @{$session{"${Prefix}FilteredList"}||[]}
+	if $Action eq 'AddAll';
+
+    @$OffList = grep {
+	my $id = $IdFlag ? $_ : $_->Id;
+	my $ok = (grep { $_ == $id } @Off);
+	push @$List, $_ if $ok;
+	!$ok;
+    } @$OffList;
+}
+elsif ($Action eq 'Delete') {
+    @$List = grep {
+	my $id = $_->Id;
+	my $ok = (grep { $_ == $id } @On);
+	push @$OffList, $IdFlag ? $_->Id : $_ if $ok;
+	!$ok;
+    } @$List;
+}
+elsif ($Action eq 'DeleteAll') {
+    push @$OffList, map { $IdFlag ? $_->Id : $_ } @$List;
+    @$List = ();
+}
+
+@$List = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => $_->Name ] } grep { $_->Name }
+map {
+         my $Obj = RT::User->new($session{'CurrentUser'});
+         $Obj->Load($_);
+         $Obj;
+}
+ @$List );
+
+if ($Action ne 'Search') {
+    $session{"${Prefix}List"}    = [ @$List ];
+    $session{"${Prefix}OffList"} = [ @$OffList ];
+}
+$session{"${Prefix}Extra"} = $Extra unless $Action eq 'Search' or !exists $ARGS{Extra};
+
+my $U = $session{'CurrentUser'}->UserObj;
+my $J = $U->table($U->normalize($U->table('employee'), 'job'));
+my $company = $U->val('company') || 1;
+my %J = map {($_->{job_cname}, $_->{job_id})}
+	grep { $_->{company_id} eq $company }
+	values %$J;
+my $Jobs;
+@$Jobs = sort keys %J;
+
+my $Groups = RT::Groups->new($session{'CurrentUser'});
+$Groups->LimitToUserDefinedGroups();
+my $GroupList = $Groups->ItemsArrayRef;
+@$GroupList = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => 
+    (int($_->Description) ? 1 : 0) . $_->Name
+] } grep {
+    $_->Description >= 0
+} grep { $_->Name } @$GroupList );
+
+my $Filtered = 0;
+
+my $init = sub {
+    return unless $IdFlag;
+    $Filtered++;
+    $OffList = [map {
+         my $Obj = RT::User->new($session{'CurrentUser'});
+         $Obj->Load($_);
+         $Obj;
+    } @$OffList] if $IdFlag;
+    $IdFlag = 0;
+};
+
+
+if ($GroupId) {
+    my $GroupObj = RT::Group->new($session{'CurrentUser'});
+    $GroupObj->Load($GroupId);
+    @$OffList = grep {
+        my $member_obj = RT::GroupMember->new($session{CurrentUser});
+        $member_obj->LoadByCols( MemberId => $_, GroupId => $GroupObj->PrincipalId );
+        $member_obj->id;
+    } @$OffList;
+    $Filtered++;
+}
+
+if ($JobId) {
+    &$init;
+    @$OffList = grep { $_->val('job') == $JobId } @$OffList;
+}
+
+if ($Name) {
+    &$init;
+    @$OffList = grep { index($_->Name, $Name) > -1 } @$OffList;
+}
+
+if ($IdMin and $IdMax) {
+    &$init;
+    @$OffList = grep {
+	$_->get('no') ge $IdMin
+	    and
+	$_->get('no') le $IdMax 
+    } @$OffList;
+}
+elsif ($IdMin or $IdMax) {
+    &$init;
+    my $Id = $IdMin || $IdMax;
+    @$OffList = grep { $_->get('no') eq $Id } @$OffList;
+}
+
+$session{"${Prefix}FilteredList"} = [map { $IdFlag ? $_ : $_->Id } @$OffList];
+</%INIT>
+<%ARGS>
+$Show => ''
+$GroupId => 0
+$JobId => 0
+$Action => ''
+$IdMin => ''
+$IdMax => ''
+$Name => ''
+@On => ()
+@Off => ()
+$IsWork	=> 0
+$Prefix => ''
+$Extra => ''
+</%ARGS>

@@ -1,0 +1,40 @@
+%# "I drink to make other people interesting."
+%# 		-- George Jean Nathan
+
+% require RT::Workflow;
+% my $Count;
+% # XXX - breaks since 1.9 gt 1.10; we assume that won't happen easily.
+% my $Children = [ sort { $a->Id cmp $b->Id } @{ $List->Children } ];
+% my %seen;
+% foreach my $Entry (@$Children) {
+%    next if $seen{$Entry->Id}++;
+%    $Count++;  
+%    my $IsNode = ($Entry->Id eq join('.', map int($_), @Id, $Count));
+<tr><td>
+%    foreach my $last (@Depth) {
+    <img alt="|" src="/img/ftv2<% $last ? 'blank' : 'vertline' %>.png" width="16" height="22" align="left">
+%    }
+    <img alt="-" height=22 src="/img/ftv2<% ($Entry == $Children->[-1]) ? 'last' : '' %>node.png" width=16 board="0" align="left"> 
+%   $Entry->{Alias} = $Seen->{_cnt}{$Entry->Id} ||= () = keys %{$Seen->{_cnt}||={}};
+%#   $Entry->{Alias} = $Entry->Id;
+%#   $Entry->{Alias} =~ s!\.!-!g;
+    <div class="<% $IsNode ? 'block' : 'alias' %>">&nbsp;<% $Entry->{Alias} %>&nbsp;</div>
+%    my $text = loc(ucfirst($Entry->Type)) . ': ' . $Entry->Subject;
+    <span <% ($Item == $Entry and $ParentItem->Id eq $List->Id) ? 'class=current' : 'class=workflow' %>><a href="index.html?Queue=<% $Queue %>&Entry=<% $Entry->Id %><% $List->Id ? '&Parent='.$List->Id : '' %>"><% $text %></a></span>
+</td></tr>
+% next unless $IsNode;
+<& Entry, List => $Entry, Item => $Item, ParentItem => $ParentItem, Depth => [ @Depth, ($Entry == $Children->[-1] ) ], Id => [ @Id, $Count ], Seen => $Seen, Queue => $Queue &>
+% }
+
+<%INIT>
+$Seen->{$List}++;
+</%INIT>
+<%ARGS>
+$Queue => 0
+$List => undef
+$Item => undef
+$ParentItem => undef
+$Seen => {}
+@Depth => ()
+@Id => ()
+</%ARGS>

@@ -1,0 +1,121 @@
+%# Smoked duke breast and orange on green garden salad
+<HTML>
+<HEAD>
+% if ($RT::OIN104) {
+<TITLE>104 Enterprise Portal</TITLE>
+% } else {
+<TITLE><&|/l, $RT::rtname &>RT for [_1]</&></TITLE>
+% }
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+% if ($Refresh > 0) {
+<META HTTP-EQUIV="REFRESH" CONTENT="<%$Refresh%>">
+% }
+<link rel="stylesheet" href="/stylesheet/style.css" type="text/css">
+<script language=javascript src="/function/MM_openBrWindow.js"></script>
+<script language=javascript src="/function/DynaTD.js"></script>
+<script language=javascript src="/function/swapImgRestore.js"></script>
+<script language=javascript src="/function/MM_findObj.js"></script>
+<script language=javascript src="/function/showHideLayers.js"></script>
+<script language=javascript src="/function/goToURL.js"></script>
+<script language=javascript src="/function/ClearDefault.js"></script>
+<script language=javascript src="/function/Pro.js"></script>
+</HEAD>
+% if ($RT::OIN104) {
+<style><!--
+TABLE.fixed { table-layout: fixed }
+--></style>
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<table border="0" cellspacing="0" cellpadding="0" width="99%">
+  <tr> 
+    <td valign="top" width="17"><img alt="|" src="/img/Left_colorBox.png" width="17" height="208"></td>
+% } else {
+<BODY BGCOLOR="#C4E1F0" TEXT="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<table border="0" cellspacing="0" cellpadding="0" width="99%">
+  <tr> 
+<td>
+    <& /Edit/Elements/104Top &>
+    </td></tr></table>
+    <table align="center" border="0" cellspacing="0" cellpadding="0" width="97%">
+    <tr>
+    <td rowspan="2">
+<FORM ACTION="<% $RT::WebPath%>/Work/Tickets/Create.html">
+<&|/l, $m->scomp('/Elements/SelectNewTicketQueue')&><input type="submit" value="New ticket in">&nbsp;[_1]</&>
+</FORM>
+    </td>
+    <td width="25" height="22">&nbsp;</td>
+<td align="right" rowspan="2">
+<form action="<% $RT::WebPath %>/Work/Tickets/Display.html">
+<input type="submit" value="<&|/l&>Goto ticket</&>">
+<input size="5" name="id" accesskey="0">
+</form>
+    </td></tr>
+    <tr><td style="height: 2em">&nbsp;</td></tr>
+    </table>
+    <table border="0" cellspacing="0" cellpadding="0" width="97%" align="center"><tr>
+% }
+    <td valign="top"> 
+      <form style="margin: 0" action="<% $Action %>" method="<% $Method %>"
+% if ($Enctype) {
+	enctype="<% $Enctype %>"
+% }
+      >
+% if ($RT::OIN104) {
+      <table border="0" cellspacing="0" cellpadding="0" width="100%">
+        <tr> 
+          <td valign="top" width="183"><img alt="|" src="/img/Middle_Left.png" width="183" height="71">
+% if (my $portal_url = $session{'PortalURL'}) {
+%     chop($portal_url) if $portal_url =~ m/\/$/;
+	    <img src="<% $portal_url %>/eWorkflow/SessionContinuance.asp" width="1" height="1">
+% }
+          </td>
+          <td valign="top" width="806">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" background="/img/TopColor_Index.png">
+              <tr> 
+                <td height="76" valign="top"> 
+                  <table width="100%" border="0" cellspacing="7" cellpadding="2">
+                    <tr> 
+                      <td width="5%" height="39">&nbsp;</td>
+                      <td width="95%" height="39"> 
+                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                          <tr> 
+                            <td height="20"><font size="3"><b><% loc($Title) %></b></font></td>
+                          </tr>
+                          <tr> 
+                            <td valign="bottom" height="17"><font color="#333333"> 
+                              <font face="Verdana, Arial, Helvetica, sans-serif">HOME</font> 
+                              <font face="Verdana, Arial, Helvetica, sans-serif">&gt;&gt; 
+                              </font><&|/l&>Public Service</&><font face="Verdana, Arial, Helvetica, sans-serif"> 
+                              &gt;&gt; <&|/l&>Form Processing</&>&gt;&gt; </font><% loc($Title) %></font></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+	  <td valign="top" height='71'><table width="100%" border="0" cellspacing="0" cellpadding="0" background="/img/Middle_Right.png" height='71'>
+		<tr><td style="font-size: 1px">&nbsp;</td></tr></table></td>
+        </tr>
+      </table>
+      <table width="99%" border="0" cellspacing="0" cellpadding="4" align="right">
+% } else {
+      <& /Work/Elements/Tab, Text => $Title &>
+      </td></tr>
+      <tr><td>
+      <table width="100%" border="0" cellspacing="0" cellpadding="4" align="center" class="poptable">
+% }
+        <tr> 
+          <td bgcolor="#C0EBEB" height="387" valign="top"> 
+<%INIT>
+$Action =~ s!//+!/!g;
+</%INIT>
+<%ARGS>
+$Title	    => ''
+$Method	    => 'Get'
+$Action	    => $r->uri
+$Enctype    => ''
+$Refresh    => 0
+</%ARGS>

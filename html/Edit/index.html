@@ -1,0 +1,7 @@
+%# According to the latest official figures, 43% of all statistics are
+%# totally worthless.
+<& /Edit/Queues/index.html, %ARGS &>
+<%INIT>
+*NOTHING::AUTOLOAD = sub {''} unless ($RT::Nothing);
+$RT::Nothing ||= bless(\(my $x), 'NOTHING');
+</%INIT>

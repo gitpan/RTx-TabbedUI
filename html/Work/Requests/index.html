@@ -1,0 +1,35 @@
+%# If you can't learn to do it well, learn to enjoy doing it badly.
+
+<& /Work/Elements/104Header, Title => 'My Requests' &>
+<& /Work/Elements/SelectSearch, Categories => \%Categories, Category => $Category, %ARGS, ShowRequestor => 0 &>
+<& /Work/Elements/List, List => $List, Begin => $Begin, URL => '/Work/Requests/Display.html', ARGS => \%ARGS, Role => 'requestor' &>
+<& /Work/Elements/104Footer &>
+
+<%INIT>
+$session{'WorkPage'} = '/Work/Requests/';
+$session{'CcSet'} = 0;
+
+my %Categories;
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit;
+my $List = [];
+
+my $MyTickets = RT::Tickets->new($session{'CurrentUser'});
+while (my $queue = $Queues->Next) {
+    my $descr = $queue->Description;
+    $Categories{$descr}++ if length $descr;
+    next if length $Category and $descr ne $Category;
+    $MyTickets->LimitQueue(VALUE => $queue->Name);
+}
+
+$m->comp('/Work/Elements/DoSearch', MyTickets => $MyTickets, %ARGS);
+my $Principal = $session{'CurrentUser'}->UserObj->PrincipalObj;
+while (my $Ticket = $MyTickets->Next) {
+    push @$List, $Ticket if $Ticket->Requestors->HasMember($Principal);
+}
+</%INIT>
+<%ARGS>
+$Category	=> ''
+$Status		=> 'unresolved'
+$Begin		=> 0
+</%ARGS>

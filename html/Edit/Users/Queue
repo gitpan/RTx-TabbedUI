@@ -1,0 +1,59 @@
+%# Health is merely the slowest possible rate at which one can die.
+
+  <tr> 
+    <td class="tableEmboss">
+      <table width="100%" border="0" cellspacing="4" cellpadding="0">
+        <tr> 
+          <td height="520" valign="top" bgcolor="#FFFFFF"> 
+            <table border="0" cellspacing="0" cellpadding="1" width="100%">
+              <tr> 
+                <td width="228" class="tableTitle" height="8"><&|/l&>Queue Name</&></td>
+                <td class="tableTitle" height="8"><&|/l&>Queue Rights</&></td>
+              </tr>
+            </table>
+            <div style="OVERFLOW: auto; HEIGHT:500px;WIDTH:350" >
+
+              <table border="0" cellspacing="0" cellpadding="3" width="100%">
+% while ( my $Queue = $Queues->Next) {
+%    my $ACLObj = RT::ACL->new($session{'CurrentUser'});
+%    $ACLObj->LimitToObject( $Queue );
+%    $ACLObj->LimitToPrincipal( Id => $PrincipalId );
+%    next unless $ACLObj->Count;
+                <tr> 
+                  <td height="50" width="228"><% $Queue->Name %></td>
+                  <td height="50"> 
+% my $i;
+% while (my $right = $ACLObj->Next) {
+%     $m->print('<br>') if $i++;
+		  <% loc($right->RightName) %>
+% }
+                </tr>
+% }
+              </table>
+            </div>
+            
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+<%INIT>
+
+my ($right, $ACLDesc, $AppliesTo, %Rights, $PrincipalId);
+
+my $princ = RT::Principal->new($RT::SystemUser);
+$princ->Load($PrincipalId);
+
+if ($princ->PrincipalType eq 'User') {
+    my $group = RT::Group->new($RT::SystemUser);
+    $group->LoadACLEquivalenceGroup($princ);
+    $PrincipalId = $group->PrincipalId;
+}
+
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit();
+
+</%INIT>
+<%ARGS>
+$Item	=> $RT::Nothing
+</%ARGS>

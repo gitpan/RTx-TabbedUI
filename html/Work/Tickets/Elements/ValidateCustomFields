@@ -1,0 +1,21 @@
+%# A countryman between two lawyers is like a fish between two cats.
+%# 		-- Ben Franklin
+<%INIT>
+my $valid = 1;
+$CustomFields->GotoFirstItem;
+while (my $CF = $CustomFields->Next) {
+    my $pattern = $CF->Attribute('Pattern') or next;
+    my $field = $Prefix . "CustomField-" . $CF->Id . "-Values";
+    $field = $1 if ($CF->Type =~ /^Label(.+)$/);
+    next if $ARGSRef->{$field} =~ $pattern;
+    $m->notes(('InvalidField-' . $CF->Id) => 1);
+    $valid = 0;
+}
+$m->notes('ValidFields', $valid);
+return $valid;
+</%INIT>
+<%ARGS>
+$CustomFields
+$ARGSRef
+$Prefix => ''
+</%ARGS>

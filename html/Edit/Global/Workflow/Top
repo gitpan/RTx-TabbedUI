@@ -1,0 +1,27 @@
+%# Keep grandma off the streets -- legalize bingo.
+
+<table width="100%" border="0" cellspacing="5" cellpadding="0" align="center">
+  <tr> 
+    <td valign="top" width="50%"><FIELDSET><LEGEND><&|/l&>Stage Condition</&></LEGEND> 
+      <& Condition, %ARGS, IsAlias => $IsAlias &>
+    </FIELDSET></td>
+    <td valign="top"><FIELDSET><LEGEND><&|/l&>Stage Action</&></LEGEND>
+      <& Action, %ARGS, IsAlias => $IsAlias &>
+    </FIELDSET></td>
+  </tr>
+</table>
+<%INIT>
+my $IsAlias = 'disabled';
+if (!UNIVERSAL::can($Item, 'IsEntryPoint') or $Item->IsEntryPoint) {
+    $IsAlias = '';
+}
+else {
+    my $ParentId = $Item->Id;
+    $ParentId =~ s/\.?\d+$//;
+    $IsAlias = '' if UNIVERSAL::can($ParentItem, 'Id') and $ParentId eq $ParentItem->Id;
+}
+</%INIT>
+<%ARGS>
+$Item
+$ParentItem
+</%ARGS>

@@ -1,0 +1,137 @@
+%# Logicians have but ill defined
+%# As rational the human kind.
+%# Logic, they say, belongs to man,
+%# But let them prove it if they can.
+%# 		-- Oliver Goldsmith
+
+</form><form action="index.html" method="Post">
+<input type="hidden" name="CF" value="<% $CF %>">
+<input type="hidden" name="Value" value="<% $Value %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+<table width="100%" border="0" cellspacing="3" cellpadding="0" class="poptable" bgcolor="#89D5ED" class="fixed"><COL width=100%>
+  <tr> 
+    <td><nobr><&|/l&>Field Content:</&> <% $Item->Name %></nobr></td>
+  </tr>
+</table>
+<table width="100%" border="0" cellspacing="3" cellpadding="0">
+  <tr> 
+    <td> 
+      <table border="0" cellpadding="0" align="center" cellspacing="0" width="95%">
+	<tr> 
+	    <td colspan=2>
+	    <& /Edit/Elements/Button, Name => "Action-ValueAdd", Image => "funcAdd", Text => "Add", Disabled => $disabled &>
+	    <& /Edit/Elements/Button, Name => "Action-ValueSave", Image => "funcSave", Text => "Save", Disabled => $noitem &>
+	    <& /Edit/Elements/Button, Name => "Action-ValueDelete", Image => "funcDelete", Text => "Delete", Disabled => $noitem &>
+	    </td>
+	</tr>
+        <tr> 
+          <td  width="50"><nobr><&|/l&>Option Name</&>&nbsp;</nobr></td>
+          <td > 
+            <input type="text" name="ValueName" value="<% $SubItem->Name %>" style="width:280px" <% $noitem %>>
+          </td>
+        </tr>
+        <tr> 
+          <td  width="50"><nobr><&|/l&>Option Description</&>&nbsp;</nobr></td>
+          <td > 
+            <input type="text" name="ValueDescription" value="<% $SubItem->Description %>" style="width:280" <% $noitem %>>
+          </td>
+        </tr>
+        <tr> 
+          <td  colspan=2 align="left">
+	  <& /Edit/Elements/Button, Name => "Action-ValueUp", Image => "funcUp", Text => "Move up", Disabled => $novalue &>
+	  <& /Edit/Elements/Button, Name => "Action-ValueDown", Image => "funcDown", Text => "Move down", Disabled => $novalue &>
+          </td>
+        </tr>
+      </table>
+      <div align="center">
+        <select name="select" size="19" style="height:350; width:333px" <% $disabled %>
+% $m->print('onclick="location.href=this.options[this.selectedIndex].tag"') unless $novalue or (!$RT::IsMSIE);
+	>
+% if (@SubHash) {
+%     while (my ($v, $descr) = splice(@SubHash, 0, 2)) {
+	  <option value="<% $v %>"><% $descr %></option>
+%     }
+% } else {
+%     foreach my $v (@$SubList) { 
+          <option 
+	  onclick="location.href='index.html?Queue=<% $Queue %>&Begin=<% $Begin %>&CF=<% $CF %>&Value=<% $v->id %>'"
+	  tag="index.html?Queue=<% $Queue %>&Begin=<% $Begin %>&CF=<% $CF %>&Value=<% $v->id %>" <% ($Value == $v->id) ? 'selected' : '' %> value="<% $v->id %>"
+	  ><% $v->Name %>
+%     if (length $v->Description) {
+(<% $v->Description %>)
+%     }
+	  </option>
+%     }
+% }
+        </select>
+      </div>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $disabled = (
+    ($Item->Id and $Item->Type =~ /Select(?!External)/) ? '' : 'disabled'
+);
+my $values = $disabled ? $RT::Nothing : $Item->Values;
+my $novalue = ( ($disabled or !$values or !$values->Count) ? 'disabled' : '' );
+my @SubHash;
+my $SubList = $values->ItemsArrayRef || [];
+my $SubItem = (grep { $_->id == $Value } @$SubList)[0] || $RT::Nothing;
+my $noitem = ( ($disabled or $novalue or ($SubItem == $RT::Nothing)) ? 'disabled' : '' );
+
+if ($Item->Type =~ /^(?:Select|Entry)External$/ and my $ext_id = $Item->Description) {
+    @SubHash = eval { $session{CurrentUser}->UserObj->field_values($Item->Description) };
+}
+
+if ($Action eq 'ValueSave' and $SubItem != $RT::Nothing) {
+    $SubItem->SetName($ARGS->{ValueName}) if exists $ARGS->{ValueName};
+    $SubItem->SetDescription($ARGS->{ValueDescription}) if exists $ARGS->{ValueDescription};
+}
+elsif (($Action eq 'ValueUp' or $Action eq 'ValueDown') and $SubItem != $RT::Nothing) {
+    my $Move = ($Action eq 'ValueDown') ? 1 : -1;
+    my $TargetObj;
+    my $target_order = $SubItem->SortOrder + $Move;
+    while (my $v = $values->Next) { 
+	my $this_order = $v->SortOrder;
+
+	# if we have an exact match, finish the loop now
+	($TargetObj = $v, last) if $this_order == $target_order;
+
+	# otherwise, we need to apropos toward the general direction
+	# ... first, check the sign is correct
+	next unless ($this_order - $SubItem->SortOrder) * $Move > 0;
+
+	# ... next, see if we already have a candidate
+	if ($TargetObj) {
+	    # ... if yes, compare the delta and choose the smaller one
+	    my $orig_delta = abs($TargetObj->SortOrder - $target_order);
+	    my $this_delta = abs($this_order - $target_order);
+	    next if $orig_delta < $this_delta;
+	}
+
+	$TargetObj = $v;
+    }
+
+    if ($TargetObj) {
+	# swap their sort order
+	my ($s, $t) = ($SubItem->SortOrder, $TargetObj->SortOrder);
+	$TargetObj->SetSortOrder($s);
+	$SubItem->SetSortOrder($t);
+	# because order changed, we must redo search for subsequent uses
+	$values->RedoSearch;
+    }
+
+    $values->GotoFirstItem;
+    $SubList = $values->ItemsArrayRef || [];
+}
+</%INIT>
+<%ARGS>
+$CF => 0
+$Item => $RT::Nothing
+$Value => 0
+$Begin => 0
+$Queue => 0
+$Action => ''
+$ARGS => {}
+</%ARGS>

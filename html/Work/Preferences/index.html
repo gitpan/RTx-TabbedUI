@@ -1,0 +1,48 @@
+%# President Reagan has noted that there are too many economic pundits and
+%# forecasters and has decided on an excess prophets tax.
+
+% if (!$NoUI) {
+<& /Work/Elements/104Header, Title => 'Preferences', Method => 'Post' &>
+% }
+<table width="100%" border="0" cellspacing="4" cellpadding="0" class="tableEmboss">
+  <tr>
+    <td width="156">&nbsp;</td>
+    <td width="14"><img src="/img/3Dtoolbar.png" width="2" height="20"></td>
+    <td> 
+      <table border="0" cellspacing="2" cellpadding="0" width="594">
+        <tr>
+	  <td valign="top" width="270">
+	  <&|/l&>User</&>:
+	  <% $session{CurrentUser}->UserObj->Name %>
+% if ($NoUI) {
+% my $OriginObj = $session{CurrentUser}->UserObj->OriginObj;
+	  &nbsp;&nbsp;
+	  <&|/l&>Member since</&>:
+	  <% eval { $OriginObj->CreatedObj->ISO } %>
+% $ARGS{OriginObj} = $OriginObj;
+% }
+	  </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr><td>
+  <& Info, %ARGS &>
+  </td></tr>
+  <tr><td align="right">
+  <input type="submit" value="<&|/l&>Save</&>">
+  </td></tr>
+</table>
+
+<& /Work/Elements/104Footer &>
+
+<%ARGS>
+$Category	=> ''
+$Begin		=> 0
+$Prefix		=> ''
+$Queue		=> ''
+$NoUI		=> 0
+$CurrentUser	=> $session{'CurrentUser'}->UserObj
+</%ARGS>

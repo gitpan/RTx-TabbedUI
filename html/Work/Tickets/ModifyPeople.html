@@ -1,0 +1,16 @@
+%# I doubt, therefore I might be.
+<& /Edit/Elements/PopHeader, Title => loc('Pick'), BG => '#C0EBEB', Action => '/Work/Tickets/ModifyPeople.html' &>
+<& /Edit/Elements/PickUsers, Prefix => 'Cc', IsWork => 1, Action => $Action, %ARGS &>
+<& /Edit/Elements/PopFooter &>
+<%INIT>
+my $Action = (
+    grep defined, map { /^Action-(.+?)(?:\.[xyXY])?[012]?$/ ? $1 : undef }
+    grep length $ARGS{$_}, keys %ARGS
+)[0];
+
+if ($Action eq 'Commit') {
+    $session{CcSet} = 1;
+    $m->print("<script>opener.location.reload();window.close();</script>");
+    $m->abort;
+}
+</%INIT>

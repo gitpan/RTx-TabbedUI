@@ -1,0 +1,60 @@
+%# "My doctor told me to stop having intimate dinners for four.  Unless
+%# there are three other people."
+%# 		-- Orson Welles
+<& /Edit/Elements/PopHeader, Title => loc('Link a Queue'), BG => '#C0EBEB', Action => 'Select.html' &>
+
+<table width="100%" border="0" cellspacing="4" cellpadding="0" class="poptable">
+  <tr>
+    <td><FIELDSET><LEGEND><&|/l&>Select a queue to link to</&></LEGEND> 
+      <table border="0" cellspacing="3" cellpadding="0" align="center">
+        <tr> 
+          <td> 
+	    <&|/l&>Ticket Type</&> 
+	    <select name="Category" style="width:150px">
+	      <option value=''><&|/l&>All</&></option>
+% foreach my $type (grep length, sort keys %Categories) {
+	      <option <% $Category eq $type and 'selected' %>><% $type %></option>
+% }
+            </select>
+	    <input type="image" border="0" name="Action-Search" src="/img/Go.png" width="23" height="19" align="middle" alt="[Go]">
+	  </td>
+	</tr>
+	<tr>
+	  <td> 
+            <select name="Queue" style="width:240px; height:300px" size="18">
+% foreach my $Item (@$List) {
+	      <option value="<% $Item->Id %>"><% $Item->Name %></option>
+% }
+            </select>
+          </td>
+        </tr>
+      </table>
+    </FIELDSET></td>
+  </tr>
+</table>
+
+<& /Edit/Elements/PopFooter &>
+<%INIT>
+if ($Queue) {
+    my $QueueObj = RT::Queue->new($session{'CurrentUser'});
+    $QueueObj->Load($Queue);
+    $m->comp('SelectReturn', QueueObj => $QueueObj);
+    $m->abort;
+}
+
+my %Categories;
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit;
+my $List = [];
+while (my $queue = $Queues->Next) {
+    my $descr = $queue->Description;
+    $Categories{$descr}++ if length $descr;
+    next if length $Category and $descr ne $Category;
+    push @$List, $queue;
+}
+</%INIT>
+<%ARGS>
+$Category	=> ''
+$Begin		=> 0
+$Queue		=> undef
+</%ARGS>

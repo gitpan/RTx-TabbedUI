@@ -1,0 +1,47 @@
+%# While your friend holds you affectionately by both your hands you are
+%# safe, for you can watch both of his.
+%# 		-- Ambrose Bierce, "The Devil's Dictionary"
+
+<& ShowLink,
+    Text => loc('Cc'),
+    Links => $Ticket->Cc->UserMembersObj,
+    Method => 'EmailAddress' &>
+
+<& ShowLink,
+    Text => loc('AdminCc'),
+    Links => $Ticket->AdminCc->UserMembersObj,
+    Method => 'EmailAddress' &>
+
+<& ShowLink,
+    Text => loc('Depends on'),
+    Links => $Ticket->DependsOn,
+    Method => 'TargetURI' &>
+
+<& ShowLink,
+    Text => loc('Depended on by'),
+    Links => $Ticket->DependedOnBy,
+    Method => 'BaseURI' &>
+
+<& ShowLink,
+    Text => loc('Parents'),
+    Links => $Ticket->MemberOf,
+    Method => 'TargetURI' &>
+
+<& ShowMembers, Ticket => $Ticket &>
+
+<& ShowLink,
+    Text => loc('Refers to'),
+    Links => $Ticket->RefersTo,
+    Method => 'TargetURI' &>
+
+<& ShowLink,
+    Text => loc('Referred to by'),
+    Links => $Ticket->ReferredToBy,
+    Method => 'BaseURI' &>
+
+% # Allow people to add more rows to the table
+% $m->comp('/Elements/Callback', %ARGS );
+
+<%ARGS>
+$Ticket => undef
+</%ARGS>

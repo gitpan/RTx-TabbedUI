@@ -1,0 +1,69 @@
+%# You have the body of a 19 year old.  Please return it before it gets wrinkled.
+<table style="table-layout: fixed" width="100%" border="0" cellspacing="1" cellpadding="2" class="poptable" bgcolor="#AAE3DE">
+<COL WIDTH="10%"><COL WIDTH="35%"><COL WIDTH="20%"><COL WIDTH="15%"><COL WIDTH="20%">
+<TR>
+<TD COLSPAN=5 align="center"><&|/l, $rows &>[_1] highest priority tickets pending my approval...</&></TD>
+</TR>
+<TR>
+<TD class="tableTitle" ALIGN=RIGHT><&|/l&>#</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Subject</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Queue</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Stage</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><nobr><&|/l&>Requestor</&></nobr></TD>
+</TR>
+  <TR>    
+% my $i;
+% for (1..$rows) {
+%     my $Ticket = $MyTickets->Next unless $i;
+%     $i++ unless $Ticket;
+%     next if !$i and $Ticket->HasUnresolvedDependencies( Type => 'approval' );
+%     my $Approving = eval { $Ticket->OriginObj } || $RT::Nothing;
+%     my $bg = 'ffffff';
+%     my $clicky = '';
+    <tr bgcolor='<% $bg %>'
+%     if (!$i) {
+	onMouseOver="this.style.backgroundColor='#D1FAFC'" 
+        onMouseOut="this.style.backgroundColor='<% $bg %>'"
+	style="cursor:hand" 
+	onClick="MM_goToURL('self','/Work/Approvals/Display.html?id=<% $Ticket->Id %>');return document.MM_returnValue"];
+%     } else { $Ticket = $RT::Nothing }
+    > 
+<TD ALIGN=RIGHT>
+<%$Approving->Id%>
+</TD>
+<TD>
+% unless ($i) {
+<A STYLE="color: black" HREF="<% $RT::WebPath %>/Work/Tickets/Display.html?id=<%$Ticket->Id%>">
+<%$Approving->Subject || loc('(no subject)')%>
+</A>
+% }
+</TD>
+<TD>
+<%eval { $Approving->QueueObj->Name }%>
+</TD>
+<TD>
+<% $Ticket->Subject %>
+</TD>
+<TD height="24">
+% if ($i) { 
+&nbsp;
+% } else {
+<% eval { $Ticket->FirstRequestor->Name } %>
+% }
+</TD>
+</TR>
+% }
+</TABLE>
+
+
+<%INIT>
+my $rows = 5;
+my $MyTickets;
+$MyTickets = new RT::Tickets ($session{'CurrentUser'});
+$MyTickets->LimitOwner(VALUE => $session{'CurrentUser'}->Id);
+$MyTickets->Limit( FIELD => 'Type', VALUE => 'approval' );
+$MyTickets->LimitStatus(VALUE => "open");
+$MyTickets->LimitStatus(VALUE => "new");
+$MyTickets->OrderBy(FIELD => 'Priority', ORDER => 'DESC');
+
+</%INIT>

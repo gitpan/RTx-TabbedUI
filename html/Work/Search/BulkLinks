@@ -1,0 +1,28 @@
+  <TR>
+    <TD align="right"><&|/l&>Merge into</&>:</TD>
+    <TD colspan="3"><input name="Ticket-MergeInto"> <i><&|/l&>(only one ticket)</&></i></TD>
+  </TR>
+  <TR>
+    <TD align="right"><&|/l&>Depends on</&>:</TD>
+    <TD colspan="3"><input name="Ticket-DependsOn"></TD>
+  </TR>
+  <TR>
+    <TD align="right"><&|/l&>Depended on by</&>:</TD>
+    <TD colspan="3"><input name="DependsOn-Ticket"></TD>
+  </TR>
+  <TR>
+    <TD align="right"><&|/l&>Parents</&>:</TD>
+    <TD colspan="3"><input name="Ticket-MemberOf"></TD>
+  </TR>
+  <TR>
+    <TD align="right"><&|/l&>Children</&>:</TD>
+    <TD colspan="3"> <input name="MemberOf-Ticket"></TD>
+  </TR>
+  <TR>
+    <TD align="right"><&|/l&>Refers to</&>:</TD>
+    <TD colspan="3"><input name="Ticket-RefersTo"></TD>
+  </TR>
+  <TR>
+    <TD align="right"><&|/l&>Referred to by</&>:</TD>
+    <TD colspan="3"> <input name="RefersTo-Ticket"></TD>
+  </TR>

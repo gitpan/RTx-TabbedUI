@@ -1,0 +1,21 @@
+%# It is easier to write an incorrect program than understand a correct one.
+<& /Edit/Elements/PopHeader, Action => "Import.html", Title => loc('Import'), NoStyle => 1, Margin => 0 &>
+
+<input type="hidden" name="Queue" value="<% $Queue %>">
+<textarea rows=12 name="Content" style="width:100%; height:225; font-size: 12px"><% $m->scomp('Export.html', %ARGS, LoadOnly => 0, Silent => 1) %></textarea>
+<& /Edit/Elements/PopFooter &>
+
+<%INIT>
+if ($ARGS{'Action-Commit'}) {
+    my $Obj = $m->comp('Export.html', %ARGS, LoadOnly => 1)->TemplateObj;
+    $Content =~ s/\015\012/\n/g;
+    $Content =~ s/\015/\n/g;
+    $Obj->SetContent($Content);
+    $m->print("<html><body><script>opener.location.reload();window.close();</script></body></html>");
+    $m->abort;
+}
+</%INIT>
+<%ARGS>
+$Content    => undef
+$Queue	    => 0
+</%ARGS>

@@ -1,0 +1,3 @@
+%# Intolerance is the last defense of the insecure.
+% return '' unless $RT::IsMSIE and !$ARGS{ReadOnly};
+maxlength=10 onkeypress="return DateOnly();" onblur="CheckDate(this,false);" onclick="Calendar(this);"

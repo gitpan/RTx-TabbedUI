@@ -1,0 +1,55 @@
+%# "All flesh is grass"
+%# 		-- Isiah
+%# Smoke a friend today.
+
+<& /Work/Elements/104Header, Title => 'My Approvals', Method => 'POST', Action => 'Update.html' &>
+
+<INPUT TYPE="HIDDEN" NAME="id" VALUE="<% $Approval->Id %>">
+
+<& /Work/Tickets/Elements/ShowQueue, QueueObj => $Ticket->QueueObj, TicketObj => $Ticket &>
+<& /Work/Tickets/Elements/ShowBasics, Ticket => $Ticket, ReadOnly => 1 &>
+<tr><td><table cellpadding=0 cellspacing=0 border=0 width="100%">
+<& /Work/Tickets/Elements/EditCustomFields, Ticket => $Ticket, ReadOnly => 0, ShowOrAdd => 'Show' &>
+</td></tr></table>
+<& /Work/Tickets/Elements/ShowHistory, 
+      Ticket => $Ticket, 
+      Collapsed => $ARGS{'Collapsed'}, 
+      ShowHeaders => $ARGS{'ShowHeaders'} &> 
+% if ($Approval->Status eq 'new' or $Approval->Status eq 'open') {
+<& /Work/Approvals/Elements/Approve, Ticket => $Approval &>
+% }
+	    </table>
+            <div align="center"><br>
+	      <& /Work/Elements/BackButton &>
+% if ($Approval->Status eq 'new' or $Approval->Status eq 'open') {
+              <input type="submit" name="Action-Approve" id="Action-Approve" value="<&|/l&>Confirm Submit</&> &gt;&gt;" onclick="return(
+    document.getElementById('ActionDeny').checked
+	? window.confirm('<&|/l&>Really reject this ticket?</&>')
+	: 1
+);" 
+	      >
+% }
+            </div>
+	    <br>
+	    <br>
+	    <a href="#" id="BottomObj" name="BottomObj"></a>
+          </td>
+        </tr>
+
+<%INIT>
+my $Approval = RT::Ticket->new($session{'CurrentUser'});
+
+unless ($id) { Abort('No ticket specified'); }
+$Approval = LoadTicket($ARGS{'id'});
+unless ($Approval->CurrentUserHasRight('ShowTicket')) {
+    Abort("No permission to view ticket");
+}
+
+Abort('Not an approval ticket') unless $Approval->Type eq 'approval';
+
+my $Ticket = $Approval->OriginObj or Abort('Root ticket not found');
+
+</%INIT>
+<%ARGS>
+$id => undef
+</%ARGS>

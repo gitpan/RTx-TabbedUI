@@ -1,0 +1,39 @@
+%# Alone, adj.:
+%#	In bad company.
+%#		-- Ambrose Bierce, "The Devil's Dictionary"
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="24">
+  <tr bgcolor="#207AAA"> 
+    <td class="poptable" bgcolor="#207AAA" height="24">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" height="24">
+        <tr> 
+          <td>
+% if ($RT::OIN104) {
+	    <img alt="Logo" src="/img/104.png"  align="absmiddle"><font color="#FFFFFF"> 
+		<font size="2">Management System - </font><font color="#FFFFFF"><font size="2">WorkFlow</font></font></font>
+	  </td>
+          <td align="right"> 
+	    <a href="/index/index.html" style="color: white; font-size: 7pt" target="_top"><img src="/img/home.png" width="15" height="15" align="absmiddle" border="0"><&|/l&>Homepage</&></a><font color="#FFFFFF"> 
+                |  </font>
+		<a onMouseOut="MM_swapImgRestore()" onMouseOver="MM_swapImage('Image12','','/img/QuiteOn.png',1)" href="/NoAuth/Logout.html"><img name="Image12" border="0" src="/img/Quite.png" width="15" height="15" align="texttop" alt="<&|/l&>Logout</&> <% $session{CurrentUser}->UserObj->Name %>" title="<&|/l&>Logout</&> <% $session{CurrentUser}->UserObj->Name %>"
+		></a>
+% } else {
+	    &nbsp;<font color="white" size="2"><&|/l, $RT::rtname &>RT for [_1]</&></font>
+	    <SPAN STYLE="display: none"><small>| <A HREF="#skipnav"><&|/l&>Skip Menu</&></small></A></SPAN>
+	  </td>
+          <td align="right" style="color:white">
+		<a href="/" style="color: white"><img src="/img/home.png" width="15" height="15" align="absmiddle" border="0" alt="[^]"><&|/l&>Homepage</&></a>
+		|
+		<a style="color: white" href="/Work/Preferences/"><&|/l&>Preferences</&></a>
+		|
+		<a target="_blank" style="color: white" href="http://rt.elixus.org/NoAuth/docs/"><&|/l&>Help</&></a>
+		|
+		<a style="color: white" href="/index.html"><&|/l&>ClassicUI</&></a>
+		|
+		<a style="color: white" href="/NoAuth/Logout.html"><&|/l&>Logout</&> <% $session{CurrentUser}->UserObj->Name %>&nbsp;<img src="/img/Quite.png" width="15" height="15" alt="[x]" border="0" align="absmiddle"></a>
+		&nbsp;
+% }
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>

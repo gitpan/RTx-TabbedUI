@@ -1,0 +1,34 @@
+%# Whirling Whirling Rainbow Limelight
+<table align=left border="0" cellspacing="0" cellpadding="0"><tr><td>
+% if ($Disabled) {
+<button class="pushbutton_disabled" type="button" disabled name="<% $Name %>"
+% } else {
+<button class="pushbutton" type="submit" name="<% $Name %>"
+% if ($Javascript) {
+%    $m->print(qq(onclick="$Javascript;return false;"));
+% }
+% if ($RT::IsMSIE) {
+    onmouseover="
+this.style.borderLeftColor = this.style.borderTopColor = 'white';
+this.style.borderRightColor = this.style.borderBottomColor = 'black';
+"
+    onmouseout="
+this.style.borderLeftColor = this.style.borderTopColor =
+this.style.borderRightColor = this.style.borderBottomColor = '#C4E1F0';
+"
+% }
+% }
+>
+<table border="0" cellspacing="0" cellpadding="0"><tr><td><img valign="absmiddle" border="0" src="<% $ImagePath %><% $Image %><% $Disabled ? 'Disabled' : '' %>.png" alt="<% loc($Text) %>" title="<% loc($Text) %>" style="<% $Style %>"></td><td><% $Text %></td></tr></table></button>
+</td></tr></table>
+<%ARGS>
+$Name
+$Image
+$Disabled   => 0
+$ImagePath  => '/img/'
+$Text	    => $Name
+$Javascript => ''
+$Width	    => 16
+$Height	    => 15
+$Style	    => ''
+</%ARGS>

@@ -1,0 +1,88 @@
+%# "All my life I wanted to be someone; I guess I should have been more specific."
+%# 		-- Jane Wagner
+
+<& /Edit/Elements/104Header,
+    %ARGS,
+    Buttons => [
+	Add => "/Edit/Queues/Basic/index.html?Action-Add=1",
+	Save => '',
+	Delete => 1,
+	Copy => '',
+	Search => '',
+    ],
+&>
+
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td ><& $Tab, Text => 'Queues' &></td>
+  </tr>
+  <tr> 
+    <td valign="top" > 
+      <table border="0" cellspacing="3" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+		<td ><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '/Edit/Queues/', Skip => '/Edit/Queues/Basic/' &></td>
+              </tr>
+              <tr> 
+                <td class="tableEmboss" >
+                  <table width="100%" border="0" cellspacing="0" cellpadding="0" align=center>
+                    <tr> 
+                      <td height=35px>&nbsp;&nbsp;<&|/l&>Ticket Type</&> 
+                        <select name="Category" style="width:60%">
+                          <option value=""><&|/l&>All</&></option>
+% foreach my $type (grep length, sort keys %Categories) {
+                                      <option <% ($Category eq $type) ? 'selected' : '' %>><% $type %></option>
+% }
+                        </select>
+<input type="checkbox" name="FindDisabledQueues" <% $FindDisabledQueues ? 'CHECKED' : '' %>> <&|/l&>Include disabled queues in listing.</&>
+                        <input type="image" border="0" name="Action-Search" src="/img/Go.png" width="23" height="19" align="middle" alt="[Go]">
+                      </td>
+                    </tr>
+                    <tr> 
+                      <td>
+			<& List, Delete => sub { !$_[0]->Disabled }, List => $List, Begin => $Begin, ARGS => \%ARGS &>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+if ($Action eq 'Delete') {
+    foreach my $Id (@ListDelete) {
+	my $item = RT::Queue->new($session{'CurrentUser'});
+	$item->Load($Id);
+	$item->SetDisabled(1);
+    }
+    $Begin = 0;
+}
+
+my %Categories;
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit;
+$Queues->{'find_disabled_rows'} = 1 if $FindDisabledQueues;
+my $List = [];
+while (my $queue = $Queues->Next) {
+    my $descr = $queue->Description;
+    $Categories{$descr}++ if length $descr;
+    next if length $Category and $descr ne $Category;
+    push @$List, $queue;
+}
+@$List = sort { $a->Name cmp $b->Name } grep { !$_->Attribute('Hidden') } @$List;
+</%INIT>
+<%ARGS>
+$Action		=> ''
+$Category	=> ''
+$Begin		=> 0
+$FindDisabledQueues => 0
+@ListDelete	=> ()
+$Tab => '/Edit/Elements/Tab'
+</%ARGS>

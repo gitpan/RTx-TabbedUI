@@ -1,0 +1,66 @@
+%# God is Dead
+%#		-- Nietzsche
+%# Nietzsche is Dead
+%#		-- God
+%# Nietzsche is God
+%#		-- The Dead
+<table style="table-layout: fixed" width="100%" border="0" cellspacing="1" cellpadding="2" class="poptable" bgcolor="#AAE3DE">
+<COL WIDTH="50%"><COL WIDTH="10%"><COL WIDTH="10%"><COL WIDTH="10%"><COL WIDTH="20%">
+<TR>
+<TD COLSPAN=5 align="center"><&|/l&>Quick Search</&></TD>
+</TR>
+
+<TR>
+<TD class="tableTitle" ALIGN=LEFT><nobr><&|/l&>Queue</&></nobr></TD>
+<TD class="tableTitle" ALIGN=LEFT><nobr><&|/l&>New</&></nobr></TD>
+<TD class="tableTitle" ALIGN=LEFT><nobr><&|/l&>Open</&></nobr></TD>
+<TD class="tableTitle" ALIGN=LEFT><nobr><&|/l&>Stalled</&></nobr></TD>
+<TD class="tableTitle" ALIGN=LEFT><nobr><&|/l&>Owner</&></nobr></TD>
+</TR>
+
+<%PERL>
+my $i;
+for (1..$rows) {
+    my $queue = $Queues->Next unless $i;
+    $i++ unless $queue;
+    my ($open, $new, $stalled);
+    if (!$i) {
+	$Tickets->ClearRestrictions;
+	$Tickets->LimitStatus(VALUE => "open");                                
+	$Tickets->LimitQueue(VALUE => $queue->Name, OPERATOR => '=');            
+	$open = $Tickets->Count();
+
+	$Tickets->ClearRestrictions;
+	$Tickets->LimitStatus(VALUE => "new");
+	$Tickets->LimitQueue(VALUE => $queue->Name, OPERATOR => '=');            
+	$new = $Tickets->Count();
+
+	$Tickets->ClearRestrictions;
+	$Tickets->LimitStatus(VALUE => "stalled");
+	$Tickets->LimitQueue(VALUE => $queue->Name, OPERATOR => '=');            
+	$stalled = $Tickets->Count();
+    }
+</%PERL>
+%     my $bg = 'ffffff';
+%     my $clicky = '';
+    <tr bgcolor='<% $bg %>'
+%     if (!$i) {
+	style="cursor:hand" 
+%     } else { $queue = $RT::Nothing }
+    > 
+<td height="26"><A HREF="/Work/Search/index.html?ValueOfStatus=open&ValueOfStatus=new&StatusOp=%3D&QueueOp=%3D&ValueOfQueue=<%$queue->Id%>&RowsPerPage=50&NewSearch=1" TITLE="<% $queue->Description %>"><%$queue->Name%></a>&nbsp;</TD>
+<td align="right"><A HREF="/Work/Search/index.html?ValueOfStatus=new&StatusOp=%3D&QueueOp=%3D&ValueOfQueue=<%$queue->Id%>&RowsPerPage=50&NewSearch=1"><%$new%></a></TD>
+<td align="right"><A HREF="/Work/Search/index.html?ValueOfStatus=open&StatusOp=%3D&QueueOp=%3D&ValueOfQueue=<%$queue->Id%>&RowsPerPage=50&openSearch=1"><%$open%></a></TD>
+<td align="right"><A HREF="/Work/Search/index.html?ValueOfStatus=stalled&StatusOp=%3D&QueueOp=%3D&ValueOfQueue=<%$queue->Id%>&RowsPerPage=50&stalledSearch=1"><%$stalled%></a></TD>
+<td><% eval {$queue->AdminCc->UserMembersObj->First->Name } %></td>
+</TR>
+% }
+</TABLE>
+
+<%INIT>
+my $rows = 5;
+my $Queues = RT::Queues->new($session{'CurrentUser'}); 
+$Queues->UnLimit();
+$Queues->RowsPerPage($rows);
+my $Tickets = RT::Tickets->new($session{'CurrentUser'});
+</%INIT>

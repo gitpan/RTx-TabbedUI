@@ -1,0 +1,97 @@
+%# Quidquid latine dictum sit, altum viditur.
+%# (Whatever is said in Latin sounds profound.)
+<table width="100%" border="0" cellspacing="4" cellpadding="0">
+  <tr> 
+    <td height="480"> <br>
+      <table width="80%" border="0" cellspacing="4" cellpadding="0" align="center" class="fixed">
+	<COL width="150px"><COL width=""><COL width="40px">
+        <tr> 
+          <td>&nbsp;</td>
+          <td colspan="2">&nbsp;</td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Queue Name</&></td>
+          <td colspan="2">
+            <input type="text" name="SetName" value="<% $Item->Name %>" style="width:100%">
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Ticket Type</&></td>
+          <td colspan="2">
+            <select name="SetDescription" style="width:100%">
+% foreach my $type (grep length, sort keys %$Categories) {
+		<option <% ($Item->Description eq $type) ? 'selected' : '' %>><% $type %></option>
+% }
+            </select>
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Ticket Due</&></td>
+          <td>
+            <input type="text" name="SetDefaultDueIn" value="<% ($Item->DefaultDueIn =~ /([1-9]\d*)/) ? $1 : '' %>" style="width:100%">
+	  </td><td>
+	    <span align="right"><&|/l&>days</&></span>
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Queue Priority</&></td>
+          <td colspan="2">
+            <input type="text" name="SetInitialPriority" value="<% $Item->InitialPriority %>" style="width:100%">
+          </td>
+        </tr>
+        <tr> 
+          <td><nobr><&|/l&>Over time, priority moves toward</&> </nobr></td>
+          <td colspan="2">
+            <input type="text" name="SetFinalPriority" value="<% $Item->FinalPriority %>" style="width:100%">
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Owner</&></td>
+          <td>
+            <input class="ero" readonly type="text" name="Owner" value="<% eval { $Owner->Name } %>" style="width:100%">
+	  </td><td>
+	    <input type="button" value="<&|/l&>Pick</&>" style="width: 100%" onclick="<& /Edit/Elements/NewWindow, "/Edit/Queues/Basic/Add.html?Queue=" . $Item->Id, 290, 430 &>" <% $Item->Id ? '' : 'disabled' %>>
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Owner</&> Email</td>
+          <td colspan="2">
+            <input class="ero" readonly type="text" name="AdminCcEmail" value="<% eval {$Owner->EmailAddress} %>" style="width:100%">
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Enabled Status</&></td>
+          <td colspan="2">
+            <select name="SetDisabled" style="width:100%">
+              <option value="0" <% $Item->Disabled ? '' : 'selected' %>><&|/l&>Open</&></option>
+              <option value="1" <% $Item->Disabled ? 'selected' : '' %>><&|/l&>Disabled</&></option>
+            </select>
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Enabled Date</&></td>
+          <td colspan="2">
+            <input class="ero" readonly type="text" name="EnabledDate" value="<% eval { $Item->CreatedObj->AsDate } %>" style="width:100%">
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Hidden</&></td>
+          <td colspan="2">
+            <input type="radio" name="AttrHidden" value="1" <% eval{ $Item->Attribute('Hidden') } ? 'CHECKED' : '' %>><&|/l&>Yes</&>
+            <input type="radio" name="AttrHidden" value="0" <% eval{ $Item->Attribute('Hidden') } ? '' : 'CHECKED' %>><&|/l&>No</&>
+          </td>
+        </tr>
+        <tr> 
+          <td>&nbsp;</td>
+          <td colspan="2">&nbsp;</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%ARGS>
+$Item => $RT::Nothing
+$Categories => {}
+$Users => []
+$Owner => $RT::Nothing
+</%ARGS>

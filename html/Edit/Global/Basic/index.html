@@ -1,0 +1,41 @@
+%# A banker is a fellow who lends you his umbrella when the sun is shining
+%# and wants it back the minute it begins to rain.
+%# 		-- Mark Twain
+
+<& /Edit/Elements/104Header,
+    Buttons => [
+	Add => '',
+	Save => (($^O eq 'MSWin32') ? "javascript:document.getElementById('mainform').submit()" : ''),
+	Delete => '',
+	Copy => '',
+	Search => '',
+	Help => '/NoAuth/Pod.html',
+    ],
+    Method => 'POST',
+&>
+
+<& /Edit/Elements/Preamble, Text => 'Global', URL => '../Basic', %ARGS &>
+<& Top, Item => $Item &>
+<& /Edit/Elements/Postamble &>
+
+<%INIT>
+my $Item = {};
+
+if ($^O eq 'MSWin32') {
+    require Win32::TieRegistry;
+    $Item = $Win32::TieRegistry::Registry->{
+	"HKEY_LOCAL_MACHINE\\Software\\OurInternet\\Request Tracker"
+    };
+
+    foreach my $key (grep /^Set\w+$/, keys %ARGS) {
+	$Item->{substr($key, 3)} = $ARGS{$key};
+    }
+}
+else {
+    # XXX: somehow hack SiteConfig.pm
+}
+
+</%INIT>
+<%ARGS>
+$Action => ""
+</%ARGS>

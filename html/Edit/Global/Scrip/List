@@ -1,0 +1,18 @@
+%# She missed an invaluable opportunity to give him a look that you could
+%# have poured on a waffle ...
+% my $sub = sub { my $meth = shift; loc($_[0]->$meth->Name) if $_[0]->$meth };
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '20%', loc('Scrip Name'),	    sub { loc($_[0]->Description) } ],
+	[ '25%', loc('Scrip Condition'),    sub { $sub->(ConditionObj => $_[0]) } ],
+	[ '25%', loc('Scrip Action'),	    sub { $sub->(ActionObj => $_[0]) } ],
+	[ '30%', loc('Apply Template'),	    sub { $sub->(TemplateObj => $_[0]) } ],
+    ],
+    Link    => sub { "index.html?Queue=$ARGS->{Queue}&Begin=$Begin&Scrip=" . $_[0]->Id },
+    Size    => 6,
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

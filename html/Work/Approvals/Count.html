@@ -1,0 +1,88 @@
+%# A well adjusted person is one who makes the same mistake twice without
+%# getting nervous.
+<body bgcolor="#B1E0EB" topmargin=0 leftmargin=0 style="margin: 0"><h5><font face="Verdana, Arial, Helvetica, sans-serif" ><b><label id=txt1><font style="font-size: 8pt"><% $count %></font></label></b></font></h5></body>
+<script language="JavaScript">
+<!--
+   var texts = new Array;
+   var count = 0;
+   var t = 0;
+
+   insText('txt1','#CC0066','transparent','#FFFFFF','#CC0066');
+
+
+   init(true);
+
+   function insText(s,c1,b1,c2,b2) {
+       texts[count] = new addItem(s,c1,b1,c2,b2)
+       count++;
+   }
+
+   function addItem(s,c1,b1,c2,b2) {
+       this.id=s;
+       this.color1=c1;
+       this.backgroundColor1=b1;
+       this.color2=c2;
+       this.backgroundColor2=b2;
+   }
+
+   function init(t) {
+       var i
+       for (i=0;i<count;i++) {
+           if (t) {
+              document.all(texts[i].id).style.color=texts[i].color1;
+              document.all(texts[i].id).style.backgroundColor=texts[i].backgroundColor1;
+           } else {
+              document.all(texts[i].id).style.color=texts[i].color2;
+              document.all(texts[i].id).style.backgroundColor=texts[i].backgroundColor2;
+           }
+       }
+       var timer=setTimeout("init("+!t+")",500)
+   }
+//-->
+</script>
+% $m->abort;
+<%INIT>
+
+my $UserObj = RT::User->new($RT::SystemUser);
+
+if ($name) {
+    $UserObj->Load($name);
+}
+else {
+    $UserObj->LoadByCol( ExternalAuthId => ($id || RT::User->no_to_id($no)) );
+}
+
+my $List = [];
+
+my $clause = "SELECT Id FROM Tickets WHERE Type = 'approval' AND ( Owner = ";
+$clause .= $UserObj->Id;
+
+# now, get additional owners (people that delegates to us)
+my $Groups = RT::Groups->new( $RT::SystemUser );
+$Groups->Limit( FIELD => 'Domain', OPERATOR => '=', VALUE => 'Personal' );
+$Groups->Limit(
+    FIELD => 'Description',
+    OPERATOR => '=',
+    VALUE => $UserObj->PrincipalId
+);
+
+while (my $Group = $Groups->Next) {
+    next if $Group->Disabled;
+    $clause .= " OR ( Owner = " . $Group->Instance
+	     . " AND IssueStatement = " . $Group->Name . ")";
+}
+
+$clause .= ") AND ( Status = 'open'";
+$clause .= ") ORDER BY Created DESC;";
+
+my ($IDMap, %done);
+
+my $tickets = $RT::Handle->dbh->selectcol_arrayref($clause);
+my $count = @$tickets;
+
+</%INIT>
+<%ARGS>
+$no => ''
+$id => ''
+$name => ''
+</%ARGS>

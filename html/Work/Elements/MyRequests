@@ -1,0 +1,82 @@
+%# To invent, you need a good imagination and a pile of junk.
+%# 		-- Thomas Edison
+<table style="table-layout: fixed" width="100%" border="0" cellspacing="1" cellpadding="2" class="poptable" bgcolor="#AAE3DE">
+<COL WIDTH="10%"><COL WIDTH="35%"><COL WIDTH="20%"><COL WIDTH="15%"><COL WIDTH="20%">
+<TR>
+% if ($MoreURL) {
+<TD>&nbsp;</TD>
+% }
+<TD COLSPAN="<% $MoreURL ? 3 : 5 %>" align="center" bgcolor><&|/l, $rows &>[_1] highest priority tickets I requested...</&></TD>
+% if ($MoreURL) {
+<TD align="right"><NOBR><A HREF="<% $MoreURL %>"><&|/l&>More</&>...</A></NOBR></TD>
+% }
+</TR>
+<TR>
+<TD class="tableTitle" ALIGN=RIGHT><&|/l&>#</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Subject</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Queue</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Status</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Owner</&></TD>
+</TR>
+% my $i;
+% for (1 .. $rows) {
+%     my $Ticket = $MyTickets->Next unless $i;
+%     $i++ unless $Ticket;
+%     my $bg = 'ffffff';
+    <tr bgcolor='<% $bg %>'
+%     if (!$i) {
+	onMouseOver="this.style.backgroundColor='#D1FAFC'" 
+        onMouseOut="this.style.backgroundColor='<% $bg %>'"
+	style="cursor:hand" 
+	onClick="MM_goToURL('self','<% $URL %>?id=<% $Ticket->Id %>&Queue=<% $Ticket->Queue %>');return document.MM_returnValue"];
+%     } else { $Ticket = $RT::Nothing }
+    > 
+<TD ALIGN=RIGHT>
+<%$Ticket->Id%>
+</TD>
+<TD height="24">
+% if ($i) {
+&nbsp;
+% } else {
+<A STYLE="color: black" HREF="<% $RT::WebPath %><% $URL %>?id=<%$Ticket->Id%>&Queue=<% $Ticket->Queue %>">
+<%$Ticket->Subject || loc('(no subject)')%>
+</A>
+% }
+</TD>
+<TD>
+<%eval{$Ticket->QueueObj->Name}%>
+</TD>
+<TD>
+% if ($Ticket->HasUnresolvedDependencies ) {
+%     if ($Ticket->HasUnresolvedDependencies( Type => 'approval'  )) { 
+<em><&|/l&>(pending approval)</&></em>
+%     } else {
+<em><&|/l&>(pending other tickets)</&></em>
+%     }
+% } elsif (!$i) {
+<%loc($Ticket->Status)%>
+% }
+</TD>
+<TD><nobr>
+<%eval{$Ticket->OwnerObj->Name}%>
+</nobr></TD>
+</TR>
+% }
+</TABLE>
+
+
+<%INIT>
+my $rows = 5;
+my $MyTickets;
+$MyTickets = new RT::Tickets ($session{'CurrentUser'});
+$MyTickets->LimitWatcher(TYPE => 'Requestor', VALUE => $session{'CurrentUser'}->EmailAddress);
+$MyTickets->LimitStatus(VALUE => "open");
+$MyTickets->LimitStatus(VALUE => "new");
+$MyTickets->RowsPerPage($rows);
+$MyTickets->OrderBy(FIELD => 'Id', ORDER => 'DESC');
+
+</%INIT>
+<%ARGS>
+$URL	    => '/Work/Requests/Display.html'
+$MoreURL    => undef
+</%ARGS>

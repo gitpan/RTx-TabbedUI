@@ -1,0 +1,99 @@
+%# Tact, n.:
+%# 	The unsaid part of what you're thinking.
+
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+
+<& /Edit/Elements/104Header, %ARGS,
+    Buttons => [
+	Add => "index.html?Action-Add=1&Show=$Show",
+	Save => ($Group ? "javascript:document.getElementById('mainform').submit()" : ''),
+	Delete => 1,
+	Copy => '',
+	Search => '',
+    ],
+    Method => 'POST',
+    Action => undef
+&>
+
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td>
+	<& $Tab, Text => 'Groups' &>
+    </td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top">
+	    <& /Edit/Elements/Tabs, Name => 'Map2', Map => $ARGS{Map2}, URL => ($ARGS{URL} || '/Edit/Groups/') &>
+	  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="tableEmboss" >
+              <tr> 
+                <td valign="top" class="poptable" > 
+		    <& Top, Item => $Item &>
+		    <& List, Delete => sub { !$_[0]->Description }, List => $List, Begin => $Begin, Item => $Item, ARGS => \%ARGS &>
+                </td>
+                <td width="15" align="center"> 
+                  <div align="right"><img src="/img/ArrowLevelGray.png" width="13" height="25" alt="&gt;"></div>
+                </td>
+                <td width="370" valign="top"> 
+                  <table width="370" height=540 border="0" cellspacing="4" cellpadding="0">
+                    <tr>
+			<td valign=top><& $Show, Map => $ARGS{Map}, List => $List, Item => $Item, %ARGS, Show => $Show &></td>
+		    </tr>
+		  </table>
+		</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+if ($Action eq 'Add') {
+    my $GroupObj = RT::Group->new($session{'CurrentUser'});
+    $GroupObj->CreateUserDefinedGroup(Name => "(new)");
+    $GroupObj->UpdateCompany if $GroupObj->can('UpdateCompany');
+    $Group = $GroupObj->Id;
+}
+
+my $Item = $RT::Nothing;
+if ($Group) {
+    $Item = RT::Group->new($session{'CurrentUser'});
+    $Item->Load( $Group );
+}
+
+if ($Action eq 'Save') {
+    $Item->SetName($Name) if length($Name);
+    $Item->SetDisabled($Disabled) if length($Disabled);
+}
+elsif ($Action eq 'Delete') {
+    foreach my $Id (@ListDelete) {
+	my $item = RT::Group->new($session{'CurrentUser'});
+	$item->Load($Id);
+	$item->Delete;
+    }
+    $Item = $RT::Nothing;
+    $Group = $Begin = 0;
+}
+
+$Show ||= 'Member';
+$Show = 'Member' unless $Item and !$Item->Description;
+
+my $List = RT::Groups->HRMSUserDefinedGroups( $session{'CurrentUser'} );
+
+</%INIT>
+<%ARGS>
+$Group => 0
+$Begin => 0
+$Show => 'Member'
+$Action => ''
+$Name => ''
+$Disabled => ''
+@ListDelete => ()
+$Tab => '/Edit/Elements/Tab'
+</%ARGS>

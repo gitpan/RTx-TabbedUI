@@ -1,0 +1,22 @@
+%# A budget is just a method of worrying before you spend money, as well
+%# as afterward.
+
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+% if (defined($Description)) {
+<% $Loc ? loc($Description) : $Description %>
+% } else {
+<&|/l&>Subject</&>
+% }
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td>
+<INPUT Name="Subject" SIZE=60 MAXSIZE=100 VALUE="<% $Subject %>" style="width: 630px">
+<& ShowHints, CustomField => $CustomField, Loc => $Loc &>
+</td></tr>
+<%INIT>
+$Subject = $Subject->[-1] if ref $Subject;
+</%INIT>
+<%ARGS>
+$Subject
+$Description => undef
+$CustomField => $RT::Nothing
+$Loc => 0
+</%ARGS>

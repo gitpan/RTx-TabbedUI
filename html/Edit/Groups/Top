@@ -1,0 +1,33 @@
+%# It's a damn poor mind that can only think of one way to spell a word.
+%# 		-- Andrew Jackson
+<table width="100%" border="0" cellspacing="5" cellpadding="0" height="75">
+  <tr>
+    <td>
+      <table border="0" cellpadding="0" align="center" cellspacing="0" width="100%" class="fixed"><col width="55"><col width=""><tr>
+          <td  width="55"><nobr><&|/l&>Group Name</&>&nbsp;</nobr></td>
+          <td > 
+            <input value="<% $Item->Name %>" <% $disabled %> type="text" name="Name" style="width:100%"
+% $m->print($readonly);
+	    >
+          </td>
+        </tr>
+        <tr> 
+          <td  width="55"><nobr><&|/l&>Group Status</&>&nbsp;</nobr></td>
+          <td > 
+            <select <% $disabled %> name="Disabled" style="width:100%">
+              <option <% $Item->Disabled ? '' : 'selected' %> value="0"><% loc('Open') %></option>
+              <option <% $Item->Disabled ? 'selected' : '' %> value="1"><% loc('Disabled') %></option>
+            </select>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $disabled = (($Item == $RT::Nothing) ? 'disabled' : '');
+my $readonly = (($Item->Description) ? 'readonly class="ero"' : '');
+</%INIT>
+<%ARGS>
+$Item => $RT::Nothing
+</%ARGS>

@@ -1,0 +1,38 @@
+%# "I'm willing to sacrifice anything for this cause, even other people's lives"
+
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<% $Text %>&nbsp;
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td><ul style="list-style-type: none; padding-left: 10px">
+% while (my $Link = $Links->Next) {
+%    if ($Method !~ /URI/) {
+<li><% $Link->$Method %>
+%        next;
+%    }
+<li>
+% my $URI = $Link->$Method;
+<A href="<%$URI->Resolver->HREF%>">
+% if ($URI->IsLocal) {
+% my $member = $URI->Object;
+% if (UNIVERSAL::isa($member, "RT::Ticket")) {
+%   my $active = RT::Queue->IsActiveStatus($member->Status);
+%   my $name = $member->OwnerObj->Name;
+<% $active ? '' : '<del>' |n %><%$member->Id%>: <% ($name eq 'Nobody') ? '' : "($name) " %><%$member->Subject%><% $active ? '' : '</del>' |n %></a> [<%loc($member->Status)%>]<br>
+% } elsif ( UNIVERSAL::can($member, 'Name')) {
+<%$URI->Resolver->AsString%>: <%$member->Name%></a>
+% } else {
+<%$URI->Resolver->AsString%></a>
+% }
+% } else {
+<%$URI->Resolver->AsString%></a>
+% }
+% }
+</ul>
+</td></tr>
+<%INIT>
+return unless $Links and $Links->Count;
+</%INIT>
+<%ARGS>
+$Text
+$Links
+$Method
+</%ARGS>

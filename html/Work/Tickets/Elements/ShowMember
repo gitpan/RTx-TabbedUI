@@ -1,0 +1,27 @@
+%# There is no distinctly native American criminal class except Congress.
+%# 		-- Mark Twain
+
+% if ($members->Count) {
+<UL style="list-style-type: none; padding-left: 10px">
+% while (my $link = $members->Next) {
+% my $member = $link->BaseObj;
+% my $active = RT::Queue->IsActiveStatus($member->Status);
+% my $name = $member->OwnerObj->Name;
+<LI><% $active ? '' : '<del>' |n %><a href="Display.html?Queue=<% $member->Queue %>&id=<%$member->Id%>"><%$member->Id%>: <% ($name eq 'Nobody') ? '' : "($name) " %><%$member->Subject%><% $active ? '' : '</del>' |n %></a> [<%loc($member->Status)%>]<br>
+% if ($depth < 8) {
+<& SELF, Ticket => $member, depth => ($depth+1) &> 
+% }
+% }
+</UL>
+% }
+
+<%INIT>
+
+my $members = $Ticket->Members;
+
+</%INIT>
+
+<%ARGS>
+$Ticket => undef
+$depth => 1
+</%ARGS>

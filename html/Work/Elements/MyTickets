@@ -1,0 +1,109 @@
+%# We will have solar energy as soon as the utility companies solve one
+%# technical problem -- how to run a sunbeam through a meter.
+<table style="table-layout: fixed" width="100%" border="0" cellspacing="1" cellpadding="2" class="poptable" bgcolor="#AAE3DE">
+<COL WIDTH="10%"><COL WIDTH="35%"><COL WIDTH="20%"><COL WIDTH="15%"><COL WIDTH="20%">
+<TR>
+% if ($MoreURL) {
+<TD>&nbsp;</TD>
+% }
+<TD COLSPAN="<% $MoreURL ? 3 : 5 %>" align="center" bgcolor><&|/l, $rows &>[_1] highest priority tickets I own...</&></TD>
+% if ($MoreURL) {
+<TD align="right"><NOBR><A HREF="<% $MoreURL %>"><&|/l&>More</&>...</A></NOBR></TD>
+% }
+</TR>
+<TR>
+<TD class="tableTitle" ALIGN=RIGHT><&|/l&>#</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Subject</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Queue</&></TD>
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Status</&></TD>
+% if ($ShowRequestor) {
+<TD class="tableTitle" ALIGN=LEFT><&|/l&>Requestor</&></TD>
+% } else {
+<TD class="tableTitle" ALIGN=LEFT>&nbsp;</TD>
+% }
+</TR>
+  <TR>    
+% my $i;
+% for (1..$rows) {
+%     my $Ticket = $MyTickets->Next unless $i;
+%     $i++ unless $Ticket;
+%     redo if !$i and $Ticket->HasUnresolvedDependencies( Type => 'approval' );
+%     my $bg = 'ffffff';
+%     my $clicky = '';
+    <tr bgcolor='<% $bg %>'
+%     if (!$i) {
+	onMouseOver="this.style.backgroundColor='#D1FAFC'" 
+        onMouseOut="this.style.backgroundColor='<% $bg %>'"
+	style="cursor:hand" 
+%	$clicky = qq[onClick="MM_goToURL('self','$URL?id=] . $Ticket->Id . qq[&Queue=] . $Ticket->Queue . qq[');return document.MM_returnValue"];
+%     } else { $Ticket = $RT::Nothing }
+    > 
+<TD ALIGN=RIGHT
+% $m->print($clicky);
+>
+<%$Ticket->Id%>
+</TD>
+<TD
+% $m->print($clicky);
+>
+% unless ($i) {
+<A STYLE="color: black" HREF="<% $RT::WebPath %><% $URL %>?id=<%$Ticket->Id%>&Queue=<%$Ticket->Queue%>">
+<%$Ticket->Subject || loc('(no subject)')%>
+</A>
+% }
+</TD>
+<TD
+% $m->print($clicky);
+><nobr>
+<%eval { $Ticket->QueueObj->Name }%>
+</nobr></TD>
+<TD
+% $m->print($clicky);
+>
+% if ($Ticket->HasUnresolvedDependencies ) {
+%     if ($Ticket->HasUnresolvedDependencies( Type => 'approval' ) or
+%         $Ticket->HasUnresolvedDependencies( Type => 'code' )) {
+<em><&|/l&>(pending approval)</&></em>
+%     } else {
+<em><&|/l&>(pending other tickets)</&></em>
+%     }
+% } else {
+<%loc($Ticket->Status)%>
+% }
+</TD>
+<TD width="10" height="26" align="center">
+% if ($ShowRequestor) {
+<% eval{$Ticket->FirstRequestor->Name} %>
+% } elsif (!$i) {
+</form>
+<form action="<% $UpdateURL %>" method="get">
+<input type="hidden" name="id" value="<% $Ticket->Id %>">
+<input type="hidden" name="Queue" value="<% $Ticket->Queue %>">
+<input type="submit" value="<&|/l&>Update</&>" style="height: 22px; width: 50px">
+% }
+</TD>
+</TR>
+% }
+</TABLE>
+
+
+<%INIT>
+$session{'WorkPage'} = '/';
+$session{'CcSet'} = 0;
+
+my $rows = 5;
+my $MyTickets;
+$MyTickets = new RT::Tickets ($session{'CurrentUser'});
+$MyTickets->LimitOwner(VALUE => $session{'CurrentUser'}->Id);
+$MyTickets->LimitStatus(VALUE => "open");
+$MyTickets->LimitStatus(VALUE => "new");
+$MyTickets->RowsPerPage($rows);
+$MyTickets->OrderBy(FIELD => 'Id', ORDER => 'DESC');
+
+</%INIT>
+<%ARGS>
+$URL		=> '/Work/Tickets/Display.html'
+$UpdateURL	=> '/Work/Tickets/Update.html'
+$MoreURL	=> undef
+$ShowRequestor	=> 0
+</%ARGS>

@@ -1,0 +1,71 @@
+%# Vegetable foods!
+</form>
+% my $uri = $r->uri;
+% $uri =~ s,//+,/,g;
+<form action="<% $uri %>" id="thisform<% $Post %>" name="thisform<% $Post %>">
+% if (length($ARGS->{PreBegin})) {
+<input type="hidden" name="Begin" value="<% $ARGS->{PreBegin} %>">
+% }
+<table border="0" cellspacing="0" cellpadding="0" align=left>
+  <tr> 
+    <td><img src="/img/pageLeft.png" alt="|" class="pageLeft"></td>
+% if ($Begin) {
+    <td valign="middle" background="/img/pageMiddle.png" class="pageMiddle" onclick="document.thisform<% $Post %>.Begin<% $Post %>.selectedIndex = <% ($Begin / $Size) - 1 %>; setTimeout('document.thisform<% $Post %>.submit();', 500)"><img width="12" height="6" align="middle" border="0" src="/img/pageUp.png" alt="&lt;"><nobr class="pageMiddle"><a href="#" class="white"><&|/l&>Up</&></a></nobr></td>
+% } else {
+    <td valign="middle" background="/img/pageMiddle.png" class="pageMiddleDisabled"><nobr class="pageMiddle"><img width="12" height="6" align="middle" border="0" src="/img/pageUpDisabled.png" alt="&lt;"><&|/l&>Up</&></nobr></td>
+% }
+
+% if ($Begin < $max * $Size) {
+    <td valign="middle" background="/img/pageMiddle.png" class="pageMiddle" onclick="document.thisform<% $Post %>.Begin<% $Post %>.selectedIndex = <% ($Begin / $Size) + 1 %>; setTimeout('document.thisform<% $Post %>.submit();', 500)"><a href="#" class="white"><nobr class="pageMiddle"><img width="12" height="6" alt="&gt;" align="middle" border="0" src="/img/pageDown.png"><&|/l&>Down</&></a></nobr></td>
+% } else {
+    <td valign="middle" background="/img/pageMiddle.png" class="pageMiddleDisabled"><nobr class="pageMiddle"><img width="12" height="6" align="middle" border="0" alt="&gt;" src="/img/pageDownDisabled.png"><&|/l&>Down</&></nobr></td>
+% }
+    <td><img src="/img/pageRight.png" class="pageRight" alt="|"></td>
+    <td ><nobr >
+
+% my $key; my $val;
+% foreach $key (keys %$ARGS) {
+%  if (($key ne 'user') and ($key ne 'pass') and ($key ne 'Begin') and ($key ne 'Map')) {
+% 	if (ref($ARGS->{$key}) =~ /ARRAY/) {
+% 		foreach $val (@{$ARGS->{$key}}) {
+<input type=hidden name="<% $key %>" value="<% $val %>">
+%                   last;
+% 		}
+% 	}
+%	else {
+<input type="hidden" name="<% $key %>" value="<% $ARGS->{$key} %>">
+% 	}
+%  }
+% }
+      <&|/l&>Page</&>
+      <select id="Begin<% $Post %>" name="Begin<% $Post %>" class="Page" onchange="this.form.submit();">
+% foreach my $page (0 .. $max) {
+%    my $val = $page * $Size;
+        <option value="<% $val %>" <% $val eq $Begin and 'selected'%>><% $page + 1 %></option>
+% }
+      </select>
+      / <% $max + 1 %> <&|/l&>Total</&>
+% if (!$RT::OIN104) {
+      (<&|/l, scalar $count &>[_1] Total</&>)
+% }
+      </form>
+    </nobr></td>
+  </tr>
+</table>
+<%INIT>
+my $count = 0;
+if (!$RT::OIN104) {
+    foreach my $item ( @$List ) {
+	$count++ if $item != $RT::Nothing;
+    }
+}
+
+my $max = int($#$List / $Size);
+</%INIT>
+<%ARGS>
+$Begin	=> 0
+$Size	=> 16
+$List	=> []
+$ARGS	=> {}
+$Post	=> ''
+</%ARGS>

@@ -1,0 +1,70 @@
+%# Majority, n.:
+%# 	That quality that distinguishes a crime from a law.
+
+</form><form action="index.html" method="POST" style="margin: 0px; padding: 0px;">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+<input type="hidden" name="AdminUser" value="<% $AdminUser %>">
+<input type="hidden" name="BeginUser" value="<% $BeginUser %>">
+
+<table width="100%" border="0" cellspacing="4" cellpadding="0">
+    <tr><td>
+	<& /Edit/Elements/Button, Name => "Action-AddAdminUser", Image => "funcAdd", Text => "Add", Disabled => (!$Group), Javascript => $m->scomp('/Edit/Elements/NewWindow', "/Edit/Groups/AdminUsers/Add.html?Show=$Show&Group=$Group&Begin=$Begin", 670, 365) &>
+	<& /Edit/Elements/Button, Name => "Action-DeleteAdminUser", Image => "funcDelete", Text => "Delete", Disabled => (!$Group or $Item == $RT::Nothing) &>
+    </td></tr>
+    <tr><td><& List, Prefix => 'Admin', List => $List, Begin => $Begin, Item => $Item, ARGS => \%ARGS &></td></tr>
+</table>
+<%INIT>
+# figure out all user with perms toward $Item
+my $List = [];
+my $OffList = [];
+
+if ($Object != $RT::Nothing) {
+    my $Privileged = RT::Group->new($session{'CurrentUser'});
+    $Privileged->LoadSystemInternalGroup('Privileged');
+    my $Users = $Privileged->MembersObj;
+
+    while (my $Member = $Users->Next) {
+	my $UserObj = $Member->MemberObj->Object;
+	$UserObj->ExternalAuthId or next;
+	my $group = RT::Group->new($session{'CurrentUser'});
+	$group->LoadACLEquivalenceGroup($Member->MemberObj);
+	my $ACLObj = RT::ACL->new($session{'CurrentUser'});
+	$ACLObj->LimitToObject( $Object );
+	$ACLObj->LimitToPrincipal( Id => $group->PrincipalId );
+
+	if ($Action eq 'DeleteAdminUser' and $AdminUser eq $UserObj->Id) {
+	    foreach my $ace (@{$ACLObj->ItemsArrayRef}) {
+		$ace->Delete;
+	    }
+	    push @$OffList, $UserObj;
+	}
+	elsif ($ACLObj->Count) {
+	    push @$List, $UserObj;
+	}
+	else {
+	    push @$OffList, $UserObj;
+	}
+    }
+}
+
+my $Item = $RT::Nothing;
+if ($AdminUser) {
+    $Item = RT::User->new($session{'CurrentUser'});
+    $Item->Load( $AdminUser );
+}
+
+$session{UserRightList} = $List;
+$session{UserRightOffList} = $OffList;
+
+</%INIT>
+<%ARGS>
+$AdminUser => 0
+$BeginUser => 0
+$Begin => 0
+$Group => 0
+$Show => 0
+$Action => ''
+$Object => $RT::Nothing
+</%ARGS>

@@ -1,0 +1,55 @@
+%# Don't worry about avoiding temptation -- as you grow older, it starts
+%# avoiding you.
+%#		-- The Old Farmer's Almanac
+
+<tr><td valign="top" width="80"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+% if (defined($Description)) {
+<% $Loc ? loc($Description) : $Description %>
+% } else {
+<&|/l&>Attached file</&>
+% }
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td>
+
+% foreach my $key (keys %documents) {
+
+<%$key%><br>
+<ul style="margin-top: 0">
+
+%     foreach my $rev (@{$documents{$key}}) {
+%         my $size = $rev->ContentLength or next;
+%         $size = ($size > 1024) ? (int($size/102.4)/10 . "k") : ($size . "b");
+
+<li><A TARGET="_blank" HREF="/Work/Tickets/Attachment/<%$rev->TransactionObj->Id%>/<%$rev->Id%>/<%$rev->Filename%>?SessionCookie=<% $session{_session_id} %>"><%$rev->CreatedObj->ISO%> (<% $size %>)</a></li>
+
+%     }
+</ul>
+
+% }
+
+% if (!%documents) {
+(<&|/l&>none</&>)
+% }
+
+</td></tr>
+
+<%INIT>
+my %documents;
+my $transactions = $Ticket->Transactions();
+while (my $trans = $transactions->Next()) {
+        my $attachments = $trans->Attachments();
+        while (my $attach = $attachments->Next()) {
+              next unless ($attach->Filename());
+              # most recent at the top
+              unshift (@{$documents{$attach->Filename}}, $attach);
+        }
+}
+
+return if !%documents and $Optional;
+
+</%INIT>
+<%ARGS>
+$Ticket
+$Optional => 0
+$Description => undef
+$Loc => 0
+</%ARGS>

@@ -1,0 +1,140 @@
+%# Die, v.:
+%# 	To stop sinning suddenly.
+%# 		-- Elbert Hubbard
+
+<& /Edit/Elements/104Header,
+    %ARGS,
+    Buttons => [
+	Add => $m->scomp('/Edit/Elements/NewWindow', "Add.html?DoDelete=0&Queue=$Queue&Begin=$Begin", 670, 365),
+	Save => '',
+	Delete => 1,
+	Copy => '',
+	Search => '',
+    ],
+&>
+
+<input type="hidden" name="User" value="<% $User %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+
+% if ($Queue) { $m->print($m->content) } else {
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& $Tab, Text => 'Global' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4">
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+                          <tr> 
+			    <td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => ($ARGS{URL} || '../UserRight/') &></td>
+                          </tr>
+% }
+                          <tr> 
+                            <td class="poptable" bgcolor="#C4E1F0"> 
+                              <table width="100%" border="0" cellspacing="4" cellpadding="0">
+                                <tr> 
+                                  <td  valign="top"> 
+                                    <table width="100%" border="0" cellspacing="3" cellpadding="0">
+                                      <tr> 
+                                        <td height=115 valign=top  class="tableEmboss">
+					  <& Top, Item => $Item, List => $List, Queue => $Queue &>
+					</td>
+                                      </tr>
+                                      <tr> 
+                                        <td align=center valign=top > 
+					  <& List, Delete => 1, List => $List, Begin => $Begin, Item => $Item, ARGS => \%ARGS &>
+                                        </td>
+                                      </tr>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $List = [];
+my $Object = $RT::System;
+
+if ($Queue) {
+    $Object = RT::Queue->new($session{'CurrentUser'});
+    $Object->Load($Queue) || Abort(loc("Couldn't load queue [_1]",$Queue));
+}
+
+delete $INC{'RT/Users.pm'}; delete $INC{'RT/Users_Overlay.pm'}; require RT::Users;
+delete $INC{'RT/Groups.pm'}; delete $INC{'RT/Groups_Overlay.pm'}; require RT::Groups;
+# Find out which users we want to display ACL selects for
+my $Users = RT::Users->new($session{'CurrentUser'});
+$Users->Limit( FIELD => 'ExternalAuthId', OPERATOR => '!=', VALUE =>'0');
+$Users->WhoHaveRight(
+    Object => $Object,
+    IncludeSuperusers => 0,
+    IncludeSubgroupMembers => 0,
+    IncludeSystemRights => 0
+);
+
+my %ToDelete = map { $_ => 1 } @ListDelete;
+my %OffList = map { $_ => 1 } @{$RT::Handle->dbh->selectcol_arrayref(
+    "SELECT Id FROM Users WHERE ExternalAuthId != '0'"
+)};
+
+while (my $UserObj = $Users->Next) {
+    if ($Action eq 'Delete' and $ToDelete{$UserObj->Id}) {
+	my $group = RT::Group->new($session{'CurrentUser'});
+	$group->LoadACLEquivalenceGroup($UserObj);
+	my $ACLObj = RT::ACL->new($session{'CurrentUser'});
+	$ACLObj->LimitToObject( $Object );
+	$ACLObj->LimitToPrincipal( Id => $group->PrincipalId );
+
+	foreach my $ace (@{$ACLObj->ItemsArrayRef}) {
+	    $ace->Delete;
+	}
+	$User = 0;
+    }
+    else {
+	push @$List, $UserObj;
+	delete $OffList{$UserObj->Id};
+    }
+}
+
+my $Item = $RT::Nothing;
+if ($User) {
+    $Item = RT::User->new($session{'CurrentUser'});
+    $Item->Load( $User );
+}
+
+$session{UserRightList} = $List;
+$session{UserRightOffList} = [sort keys %OffList];
+
+</%INIT>
+<%ARGS>
+$Begin => 0
+$User => 0
+$Queue => 0
+$QueueObj => $RT::Nothing
+$Action => ''
+@ListDelete => ()
+$Tab => '/Edit/Elements/Tab'
+</%ARGS>

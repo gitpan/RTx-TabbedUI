@@ -1,0 +1,52 @@
+%# Excellent day to have a rotten day.
+
+<table width="100%" border="0" cellspacing="4" cellpadding="0" class="tableEmboss">
+  <tr>
+    <td width="156">&nbsp;</td>
+    <td width="14"><img src="/img/3Dtoolbar.png" width="2" height="60"></td>
+    <td> 
+      <table border="0" cellspacing="2" cellpadding="0" width="594">
+        <tr><td><&|/l&>Ticket Type</&></td><td colspan=3>
+            <select name="Category" style="width:100%">
+			    <option value=''><&|/l&>All</&></option>
+% foreach my $type (grep length, sort keys %Categories) {
+			    <option <% $Category eq $type and 'selected' %>><% $type %></option>
+% }
+	    </select>
+	</td><td><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<&|/l&>Process Status</&>&nbsp;</nobr></td><td>
+            <select name="Status" style="width:150px">
+% foreach my $status (qw(unresolved resolved approving)) {
+%     next if $status eq 'approving' and !$ShowApproving;
+		<option <% ($Status eq $status) ? 'selected' : '' %>
+		    value='<% $status %>'><% loc($status) %></option>
+% }
+	    </select>
+	</select></td><td width="36">&nbsp;</td></tr>
+        <tr><td><nobr><&|/l&>Activated Date</&>&nbsp;</nobr></td><td>
+            <input type="text" name="CreatedAfter" style="width:100px" value="<% $CreatedAfter %>" <& Date &>>
+	    </td><td align="center">
+            <&|/l&>till</&> 
+	    </td><td align="right">
+            <input type="text" name="CreatedBefore" style="width:100px" value="<% $CreatedBefore %>" <& Date &>>
+	</td><td><nobr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<&|/l&>Requestor</&>&nbsp;</nobr></td><td>
+% if ($ShowRequestor) {
+            <input type="text" name="Requestor" style="width:150px" value="<% $Requestor %>">
+% } else {
+            <input type="text" name="RequestorDisabled" style="width:150px" value="<% $session{CurrentUser}->UserObj->Name %>" class="wro" readonly disabled>
+% }
+	    </td><td><input type="image" border="0" name="Action-Search" src="/img/Go.png" width="23" height="19" align="middle">
+	</td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%ARGS>
+%Categories
+$Status		=> 'unresolved'
+$Category	=> ''
+$CreatedBefore	=> ''
+$CreatedAfter	=> ''
+$Requestor	=> ''
+$ShowRequestor	=> 1
+$ShowApproving	=> 0
+</%ARGS>

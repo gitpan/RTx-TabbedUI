@@ -1,0 +1,50 @@
+%# God isn't dead, he just couldn't find a parking place.
+
+<& /Work/Elements/104Header, Title => 'Overview', Refresh => $session{'home_refresh_interval'} &>
+
+<table width="100%" border="0" cellspacing="4" cellpadding="0" class="tableEmboss">
+  <tr>
+    <td width="156">&nbsp;</td>
+    <td width="14"><img src="/img/3Dtoolbar.png" width="2" height="20"></td>
+    <td> 
+      <table border="0" cellspacing="2" cellpadding="0" width="594">
+        <tr>
+	  <td width="270"><&|/l&>Refresh</&>
+<& /Elements/Refresh, Name => 'HomeRefreshInterval', Default => $session{'home_refresh_interval'} &>
+	    <input type="image" border="0" name="Action-Search" src="/img/Go.png" width="23" height="19" align="middle">
+	  </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td width="50%" align="center" valign="top">
+<& /Work/Elements/MyRequests &>
+    </td>
+    <td width="50%" align="center" valign="top">
+<& /Work/Elements/MyApprovals &>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top" align="center">
+<& /Work/Elements/MyTickets &>
+    </td>
+    <td width="50%" valign="top" align="center">
+<& /Work/Elements/Quicksearch &>
+    </td>
+  </tr>
+</table>
+<& /Work/Elements/104Footer &>
+
+<%INIT>
+</%INIT>
+<%ARGS>
+$Category	=> ''
+$Begin		=> 0
+$Prefix		=> ''
+$Queue		=> ''
+$NoUI		=> 0
+$CurrentUser	=> $session{'CurrentUser'}->UserObj
+</%ARGS>

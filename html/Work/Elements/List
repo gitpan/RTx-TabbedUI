@@ -1,0 +1,46 @@
+%# What this world needs is a good five-dollar plasma weapon.
+% my $approval;
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '6%', loc("Ticket ID"),	    sub { $_[0]->Id }, "align='right'" ],
+($Role eq 'approver') ? (
+	[ '10%', loc("Stage"),		    sub { $approval->Subject } ],
+	[ '8%', loc("Approver"),	    sub { $approval->OwnerObj->Name },"align=center" ],
+) : (),
+	[ '15%', loc("Queue Name"),	    sub { $_[0]->QueueObj->Name } ],
+	[ '15%', loc("Ticket Type"),	    sub { $_[0]->QueueObj->Description } ],
+	[ '10%', loc("Activated Date"),	    sub { $_[0]->CreatedObj->AsDate } ,"align=center"],
+($Role ne 'approver') ? (
+	[ '8%', loc("Status"),		    sub {
+	    $m->comp('/Work/Tickets/Elements/ShowApprovals', Ticket => $_[0], NoUI => 1)
+		? loc('(pending approval)')
+		: loc($_[0]->Status || ' ')
+	} ,"align=center"],
+) : (),
+	[ '8%', loc("Requestor"),	    sub { $_[0]->FirstRequestor->Name } ,"align=center"],
+($Role ne 'requestor') ? (
+	[ '10%', loc("Requestor's Phone"),  sub { $_[0]->FirstRequestor->WorkPhone } ],
+) : (),
+	[ '8%', loc("Queue Owner"),	    sub { $_[0]->OwnerObj->Name } ,"align=center"] ,
+($Role ne 'owner') ? (
+	[ '12%', loc("Owner's Phone"),	    sub { $_[0]->OwnerObj->WorkPhone } ] ,
+) : (),
+    ],
+    Link    => sub { "$URL?id=" . ($approval->Id || $_[0]->Id) },
+    Style   => 'height: 393px',
+    Size    => 14,
+    CBItem  => sub {
+	$approval = $_[0] || $RT::Nothing;
+	return $_[0] unless $Role eq 'approver';
+	return ($_[0] ? ($IDMap->{$_[0]->Id} || undef) : undef);
+    },
+    BG	=> '#ffffff',
+&>
+<%ARGS>
+$URL	=> ''
+$Role	=> ''
+$IDMap	=> {}
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

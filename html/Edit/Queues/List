@@ -1,0 +1,27 @@
+%# Fertility is hereditary.  If your parents didn't have any children,
+%# neither will you.
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '35%', loc('Queue Name'),	sub { $_[0]->Name } ],
+	[ '23%', loc('Ticket Type'),	sub { $_[0]->Description } ],
+	[ '10%', loc('Queue Owner'),	sub {
+	    join(',', sort map $_->Name, @{$_[0]->AdminCc->UserMembersObj->ItemsArrayRef})
+	},'align=center' ],
+	[ '10%', loc('Enabled Status'),	sub {
+	    ($_[0] == $RT::Nothing) ? '' :
+		$_[0]->Disabled ? loc('Disabled') : loc('Open');
+	} ,'align=center'],
+	[ '10%', loc('Enabled Date'),	sub { $_[0]->CreatedObj->AsDate } ,'align=center'],
+	[ '12%', loc('Ticket Due'),	sub {
+	    ($_[0] == $RT::Nothing) ? '' :
+		($_[0]->DefaultDueIn =~ /([1-9]\d*)/) ? "$1 ".loc('days') : loc('none');
+	}, "align='right'" ],
+    ],
+    Link    => sub { "/Edit/Queues/Basic/index.html?Queue=" . $_[0]->Id },
+    Size    => 18,
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

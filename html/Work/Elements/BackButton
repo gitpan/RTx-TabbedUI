@@ -1,0 +1,2 @@
+%# Some don't prefer the pursuit of happiness to the happiness of pursuit.
+<input type="button" value="&lt;&lt; <&|/l&>Back to Previous</&>" onClick="javascript:location.href='<% $session{'WorkPage'} || '/Work/Queues/' %>'">

@@ -1,0 +1,19 @@
+%# The shortest distance between two points is under construction.
+%# 		-- Noelie Alito
+
+<td width="80"> 
+<table width="100%" border="0" cellspacing="2" cellpadding="0">
+    <tr><td align="center"> 
+	<input style="width:70px"  type="submit" name="Action-Add" value="<&|/l&>Add</&> &gt;&gt;">
+    </td></tr>
+    <tr><td align="center"> 
+	<input style="width: 70px" type="submit" name="Action-AddAll" value="<&|/l&>Select All</&> &gt;&gt;">
+    </td></tr>
+    <tr><td align="center"> 
+	<input style="width: 70px" type="submit" name="Action-Delete" value="&lt;&lt; <&|/l&>Remove</&>">
+    </td></tr>
+    <tr><td align="center"> 
+	<input style="width: 70px" type="submit" name="Action-DeleteAll" value="&lt;&lt; <&|/l&>Move All</&>">
+    </td></tr>
+</table>
+</td>

@@ -1,0 +1,240 @@
+%# Things are more like they used to be than they are now.
+
+<& /Work/Elements/104Header, Title => 'My Tickets', Method => 'POST', Enctype => 'multipart/form-data' &>
+<INPUT TYPE=HIDDEN Name="Subject" SIZE=60 MAXSIZE=100 value="<%$ARGS{Subject} || $Ticket->Subject || 'Workflow'%>">
+<input type="hidden" name="QuoteTransaction" value="<% $ARGS{QuoteTransaction} %>">
+<input type="hidden" name="DefaultStatus" value="<% $DefaultStatus %>">
+<input type="hidden" name="Action" value="<% $Action %>">
+<& /Work/Tickets/Elements/ShowQueue, QueueObj => $Ticket->QueueObj, TicketObj => $Ticket &>
+<& /Work/Tickets/Elements/ShowBasics, Ticket => $Ticket &>
+              <tr> 
+                <td height="100" colspan="2" valign="top"> 
+                  <table border="0" cellspacing="2" cellpadding="0" width=100%>
+<& /Work/Tickets/Elements/EditCustomFields, Ticket => $Ticket, ReadOnly => ($IsRequestor), NoCF => $NoCF &>
+              <tr> 
+                <td bgcolor="#333333" height="2" colspan="3"></td>
+             </tr>
+              <tr> 
+                <td height="5" colspan="3"></td>
+              </tr>
+%# Info {{{
+<tr><td><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Status</&>
+</p></td><td><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+<& /Work/Elements/SelectStatus, Name=>"Status", Default => ($ARGS{'Status'} || $ARGS{'DefaultStatus'} || $Ticket->Status), ReadOnly => ($IsRequestor) &>
+</td></tr>
+<tr><td><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Owner</&>
+</p></td><td><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+<& /Work/Elements/SelectOwner, Name=>"Owner", Default => ($ARGS{'Owner'} || $Ticket->OwnerObj->Id()), QueueObj => $Ticket->QueueObj, TicketObj => $Ticket &>
+</td></tr>
+<tr><td><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Update Type</&>
+</p></td><td><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+% if ($CanComment) {
+  <input <% ($IsRequestor) ? 'disabled' : '' %> type="radio" name="UpdateType" value="private" <%$CommentDefault%>><&|/l&>Comments (Not sent to requestors)</&></option>
+% }
+% if ($CanRespond) {
+  <input <% ($IsRequestor) ? 'disabled' : '' %> type="radio" name="UpdateType" value="response" <%$ResponseDefault%>><&|/l&>Response to requestors</&></option>
+% }
+</td></tr>
+%# }}}
+<tr valign="top"><td><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle">  
+<&|/l&>Cc</&>
+</p></td><td><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td>
+% if ($RT::OIN104) {
+<input class="wro" readonly type="text" name="CcAddresses" size="70" style="width:565" value="<% join(',', (split(/\s*,\s*/, $Ticket->CcAddresses)), (map $_->Name, @$CcList), split(/\s*,\s*/, $CcExtra)) %>">
+<input type="button" value="<&|/l&>Edit</&>" onclick="<& /Edit/Elements/NewWindow, "/Work/Tickets/ModifyPeople.html", 650, 400 &>" style="width:50px">
+% } else {
+<input name="UpdateCc" size="70" style="width:565" VALUE="<%$ARGS{UpdateCc}%>"><br>
+% }
+</td></tr>
+<tr valign="top"><td><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle">  
+<&|/l&>Bcc</&>
+</p></td><td><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td>
+<input name="UpdateBcc" size="70" style="width:565" VALUE="<%$ARGS{UpdateBcc}%>"><br>
+<&|/l&>(Sends a blind carbon-copy of this update to a comma-delimited list of email addresses. Does <b>not</b> change who will receive future updates.)</&>
+</td></tr>
+
+% unless ($NoCF->{Attachments}) {
+<& /Work/Tickets/Elements/AddAttachments, %ARGS &>
+% }
+
+% unless ($NoCF->{Content}) {
+<& /Work/Tickets/Elements/AddContent, UpdateType => '', %ARGS &>
+% }
+
+                  </table>
+                </td>
+              </tr>
+              <tr> 
+                <td bgcolor="#333333" height="1" colspan="2"></td>
+              </tr>
+            </table>
+	    <INPUT TYPE=HIDDEN NAME=id VALUE="<%$Ticket->Id%>"><br>
+            <div align="center"><br>
+	      <& /Work/Elements/BackButton &>
+              <input type="submit" name="SubmitTicket" value="<&|/l&>Confirm Submit</&> &gt;&gt;"
+% if ($RT::OIN104) {
+	      onclick="return(
+    (document.getElementById('Status').selectedIndex > 4)
+	? window.confirm('<&|/l&>Really reject this ticket?</&>')
+	: 1
+);" 
+% }
+	    >
+              <br>
+            </div>
+          </td>
+        </tr>
+<%INIT>
+
+my $CanRespond = 0;
+my $CanComment = 0;
+my $title;
+
+my $Ticket = LoadTicket($id);
+my $QueueObj = $Ticket->QueueObj;
+my $OwnerObj = $Ticket->OwnerObj;
+
+foreach my $key (keys %ARGS) {
+    next unless $key =~ /^Action-(.+?)(?:\.[xy])?(?:-(\d+))?(?:-(\w+))?$/;
+    $Action = $1; $ARGS{QuoteTransaction} = $2; $ARGS{$3} = 1; last;
+}
+if ($Action eq 'Open') {
+    return $m->comp('Display.html', %ARGS, Status => 'open', Owner => $session{CurrentUser}->UserObj->Id);
+}
+elsif ($Action eq 'Links') {
+    ProcessTicketLinks( TicketObj => $Ticket, ARGSRef => \%ARGS);
+    return $m->comp('Display.html', %ARGS);
+}
+elsif ($Action eq 'People') {
+    ProcessTicketLinks( TicketObj => $Ticket, ARGSRef => \%ARGS);
+    if ($ARGS{OnlySearchForPeople} or $ARGS{OnlySearchForGroup}) {
+	$ARGS{Show} = 'People';
+    }
+    else {
+	ProcessTicketBasics( TicketObj => $Ticket, ARGSRef => \%ARGS);
+	ProcessTicketWatchers( TicketObj => $Ticket, ARGSRef => \%ARGS);
+    }
+    return $m->comp('Display.html', %ARGS);
+}
+elsif ($Action eq 'Basics') {
+    ProcessTicketBasics(TicketObj => $Ticket, ARGSRef => \%ARGS);
+    ProcessTicketDates( TicketObj => $Ticket, ARGSRef => \%ARGS);
+    $ARGS{Queue} = $Ticket->Queue;
+    return $m->comp('Display.html', %ARGS);
+}
+elsif ( $Action eq 'Resolve' ) {
+    $Action = 'Comment';
+    $ARGS{Status} = 'resolved';
+}
+
+$DefaultStatus = $ARGS{Status} if exists $ARGS{Status};
+
+if ($DefaultStatus eq 'resolved') {
+    $title = loc("Resolve ticket #[_1] ([_2])", $Ticket->id, $Ticket->Subject);
+} else {
+    $title = loc("Update ticket #[_1] ([_2])", $Ticket->id, $Ticket->Subject);
+}
+
+# Things needed in the template - we'll do the processing here, just
+# for the convenience:
+
+my ($CommentDefault, $ResponseDefault);
+if (($Action eq 'Comment') or ($ARGS{'UpdateType'} eq 'private')) {
+   $CommentDefault = "CHECKED"; 
+} else {
+    $ResponseDefault = "CHECKED";
+}
+
+$DefaultStatus = $Ticket->Status() unless ($DefaultStatus);
+
+$CanRespond = 1 if ( $Ticket->CurrentUserHasRight('ReplyToTicket') or
+                     $Ticket->CurrentUserHasRight('ModifyTicket') ); 
+
+$CanComment = 1 if ( $Ticket->CurrentUserHasRight('CommentOnTicket') or
+                     $Ticket->CurrentUserHasRight('ModifyTicket') ); 
+
+
+# {{{ deal with deleting uploaded attachments
+foreach my $key (keys %ARGS) {
+    if ($key =~ m/^DeleteAttach-(.+)$/) {
+	delete $session{'Attachments'}{$1};
+    }
+    $session{'Attachments'} = { %{$session{'Attachments'} || {}} };
+}
+
+# {{{ store the uploaded attachment in session
+if ($ARGS{'Attach'}) {			# attachment?
+    $session{'Attachments'} = {} unless defined $session{'Attachments'};
+
+    my $subject = "$ARGS{'Attach'}";
+    # since CGI.pm deutf8izes the magic field, we need to add it back.
+    Encode::_utf8_on($subject);
+    # strip leading directories
+    $subject =~ s#^.*[\\/]##;
+
+    my $attachment = MakeMIMEEntity(
+        Subject             => $subject,
+        Body                => "",
+        AttachmentFieldName => 'Attach'
+    );
+
+    $session{'Attachments'} = { %{$session{'Attachments'} || {}},
+				$ARGS{'Attach'} => $attachment };
+}
+# }}}
+
+# delete temporary storage entry to make WebUI clean
+unless (keys %{$session{'Attachments'}} and $ARGS{'UpdateAttach'}) {
+    delete $session{'Attachments'};
+}
+# }}}
+
+foreach my $key (keys %ARGS) {
+    $key =~ /^AddMoreEntry-(.*)$/ or next;
+    $ARGS{'AddMoreEntry'} = [ split(/-/, $1) ];
+}
+my $Entries = $m->comp('Elements/ProcessEntryUpdates', TicketObj => $Ticket, %ARGS);
+$ARGS{"Ticket-".$Ticket->Id."-CustomField-$_-Values"} = $Entries->{$_} foreach keys %{$Entries};
+ProcessTicketCustomFieldUpdates( ARGSRef => \%ARGS );
+
+my $IsRequestor = ($Role eq 'requestor');
+my $valid_cfs = $m->comp('Elements/ValidateCustomFields', CustomFields => $Ticket->QueueObj->CustomFields, (Prefix => "Ticket-" . $Ticket->Id . "-"), ARGSRef => \%ARGS);
+
+if ( exists $ARGS{SubmitTicket} and $valid_cfs ) {
+    # clear up for next time
+    $session{'CcSet'} = 0;
+    $m->comp('Display.html', %ARGS);
+    $m->abort();
+}
+
+my $CcList  = [];
+my $CcExtra = '';
+
+if ($session{'CcSet'}) {
+    $CcList  = [ @{$session{'CcList'}} ];
+    $CcExtra = $session{'CcExtra'};
+}
+else {
+    # Find out which users we want to display ACL selects for
+    my $Privileged = RT::Group->new($session{'CurrentUser'});
+    $Privileged->LoadSystemInternalGroup('Privileged');
+    my $Users = $Privileged->MembersObj();
+    my $OffList = [ map $_->MemberObj->Object->Id, @{$Users->ItemsArrayRef} ];
+    $session{'CcList'}	    = [];
+    $session{'CcOffList'}   = $OffList;
+    $session{'CcExtra'}	    = '';
+}
+
+my $NoCF = {};
+</%INIT>
+
+<%ARGS>
+$id => undef
+$Role => undef
+$Action => undef
+$DefaultStatus => undef
+$QuoteTransaction => undef
+</%ARGS>

@@ -1,0 +1,53 @@
+%# You can make it illegal, but you can't make it unpopular.
+<TD <% exists($ARGS{Value}) ? 'bgcolor=white' : '' %>
+    ALIGN="<% ($cf->Type eq 'EntryBoolean') ? 'CENTER' : 'LEFT' %>">
+%   my $style = (exists($ARGS{Value}) ? 'border: 0; ' : '');
+%   $style .= 'background: white; color: black; ' if $ReadOnly;
+%   if ($cf->Type eq 'EntryFreeform') {
+<INPUT STYLE="<% $style %>width: 100%" NAME="<% $Name %>" VALUE="<% $Value %>" <% $ReadOnly ? 'readonly' : '' %>>
+%   } elsif ($cf->Type eq 'EntryDate') {
+<INPUT STYLE="<% $style %>width: 100%; cursor: hand" NAME="<% $Name %>" <& /Work/Elements/Date, ReadOnly => $ReadOnly &> VALUE="<% $Value %>" <% $ReadOnly ? 'readonly' : '' %>>
+%   } elsif ($cf->Type eq 'EntryTime') {
+<INPUT STYLE="<% $style %>width: 100%" NAME="<% $Name %>" <& /Work/Elements/Time, ReadOnly => $ReadOnly &> VALUE="<% $Value %>" <% $ReadOnly ? 'readonly' : '' %>>
+%   } elsif ($cf->Type eq 'EntryNumber') {
+<INPUT STYLE="<% $style %>width: 100%" NAME="<% $Name %>" <& /Work/Elements/Number, ReadOnly => $ReadOnly &> VALUE="<% $Value %>" <% $ReadOnly ? 'readonly' : '' %>>
+%   } elsif ($cf->Type eq 'EntryBoolean') {
+%        if (exists $ARGS{Value}) {
+<INPUT TYPE=HIDDEN NAME="<% $Name %>-Boolean-Magic" VALUE=1>
+%        }
+<INPUT TYPE=CHECKBOX NAME="<% $Name %>-Boolean" <% $Value ? 'CHECKED' : '' %> <% $ReadOnly ? 'readonly disabled' : '' %>>
+%   } elsif ($cf->Type eq 'EntryExternal') {
+<SELECT STYLE="<% $style %>width: 100%" NAME="<% $Name %>" <% $ReadOnly ? 'readonly disabled' : '' %>>
+%   $UserObj ||= eval { $TicketObj->FirstRequestor } || $session{CurrentUser}->UserObj;
+%   my @SubHash = $UserObj->field_values($cf->Description);
+<option value="">
+% if (!$ReadOnly) {
+(<&|/l&>Please Select</&>)
+% }
+</option>
+%     while (my($v, $descr) = splice(@SubHash, 0, 2)) {
+        <option <% ($v eq $Value) ? 'SELECTED' : '' %> value="<% $v %>"><% $descr %></option>
+%     }
+</SELECT>
+%   } else {
+<SELECT STYLE="<% $style %>width: 100%" NAME="<% $Name %>" <% $ReadOnly ? 'readonly disabled' : '' %>>
+<option value="">
+% if (!$ReadOnly) {
+(<&|/l&>Please Select</&>)
+% }
+</option>
+%     my $CustomFieldValues = $cf->Values;
+%     while (my $value = $CustomFieldValues->Next) {
+<OPTION <% ($value->Name eq $Value) ? 'SELECTED' : '' %> VALUE="<% $value->Name %>"><% $value->Description || $value->Name %></OPTION>
+%     }
+</SELECT>
+%   }
+</TD>
+<%ARGS>
+$cf
+$Name
+$TicketObj
+$UserObj    => undef
+$Value	    => ''
+$ReadOnly   => 0
+</%ARGS>

@@ -1,0 +1,49 @@
+%# You're at the end of the road again.
+
+<& /Work/Elements/104Header, Title => 'New Request' &>
+<table width="100%" border="0" cellspacing="4" cellpadding="0" class="tableEmboss">
+  <tr> 
+    <td width="155">&nbsp;</td>
+    <td width="4"><img src="/img/3Dtoolbar.png" width="3" height="18"></td>
+    <td>
+      <table border="0" cellspacing="2" cellpadding="0">
+	<tr> 
+	  <td><&|/l&>Ticket Type</&> 
+	    <select name="Category" style="width:250px">
+	      <option value=''><&|/l&>All</&></option>
+% foreach my $type (grep length, sort keys %Categories) {
+	      <option <% $Category eq $type and 'selected' %>><% $type %></option>
+% }
+	    </select>
+	    <input type="image" border="0" name="Action-Search" src="/img/Go.png" width="23" height="19" align="middle" alt="[Go]">
+	  </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<div align="center" style="height: 420px">
+    <& List, List => $List, Begin => $Begin, ARGS => \%ARGS &>
+</div>
+</td></tr>
+<& /Work/Elements/104Footer &>
+
+<%INIT>
+$session{'WorkPage'} = '/Work/Queues/';
+
+my %Categories;
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit;
+my $List = [];
+while (my $queue = $Queues->Next) {
+    my $descr = $queue->Description;
+    $Categories{$descr}++ if length $descr;
+    next if length $Category and $descr ne $Category;
+    push @$List, $queue;
+}
+@$List = sort { $a->Name cmp $b->Name } grep { !$_->Attribute('Hidden') } @$List;
+</%INIT>
+<%ARGS>
+$Category	=> ''
+$Begin		=> 0
+</%ARGS>

@@ -1,0 +1,39 @@
+%# Penguin Trivia #46:
+%# 	Animals who are not penguins can only wish they were.
+%# 		-- Chicago Reader 10/15/82
+
+<table width="100%" border="0" cellspacing="5" cellpadding="0">
+  <tr>
+    <td height=60px> 
+      <table border="0" cellpadding="0" align="center" cellspacing="0" width="98%" class="fixed"><COL width=55px><COL width=55%><COL width=55px>
+        <tr> 
+          <td  width="55"><nobr><&|/l&>Group Name</&>&nbsp;</nobr></td>
+          <td  width="45%"> 
+            <input value="<% loc($Item->Type) || $Item->Name %>" <% $disabled %> type="text" name="textfield42" style="width:95%" class="ero" readonly>
+          </td>
+          <td  width="55"><nobr><&|/l&>Group Status</&>&nbsp;</nobr></td>
+          <td  width="45%"> 
+            <input value="<% ($Item == $RT::Nothing) ? '' : $Item->Disabled ? loc('Disabled') : loc('Open') %>" <% $disabled %> type="text" name="textfield42" style="width:95%" class="ero" readonly>
+          </td>
+        </tr>
+        <tr> 
+          <td  width="55"><nobr><&|/l&>Group Description</&>&nbsp;</nobr></td>
+          <td  width="45%"> 
+            <input value="<% int($Item->Description) ? loc('HRMSDefined') : loc($Item->Domain) %>" <% $disabled %> type="text" name="textfield42" style="width:95%" class="ero" readonly>
+          </td>
+          <td  width="50"><nobr><&|/l&>Queue Rights</&>&nbsp;</nobr></td>
+          <td > 
+            <input <% $disabled %> type="button" name="Action-Rights" value="<&|/l&>Configuration</&>" onclick="<& /Edit/Elements/NewWindow, "/Edit/Rights/index.html?Queue=$Queue&Group=" . $Item->Id, 560, 400 &>">
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $disabled = (($Item == $RT::Nothing) ? 'disabled' : '');
+</%INIT>
+<%ARGS>
+$Queue => 0
+$Item => $RT::Nothing
+</%ARGS>

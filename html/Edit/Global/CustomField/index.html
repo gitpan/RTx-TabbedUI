@@ -1,0 +1,194 @@
+%# Zounds!  I was never so bethumped with words
+%# since I first called my brother's father dad.
+%# 		-- William Shakespeare, "King John"
+
+<& /Edit/Elements/104Header,
+    Buttons => [
+	Add => "index.html?Queue=$Queue&Action-Add=1",
+	Save => ($CF ? "javascript:document.getElementById('mainform').submit()" : ''),
+	Delete => 1,
+	Copy => '',
+	Search => '',
+    ],
+    Method => 'Post',
+&>
+
+<input type="hidden" name="CF" value="<% $CF %>">
+<input type="hidden" name="Value" value="<% $Value %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+
+% if ($Queue) { $m->print($m->content) } else {
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Global' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4">
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+                          <tr> 
+			    <td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '../CustomField/' &></td>
+                          </tr>
+% }
+% my $InfoHTML = $m->scomp('Info', Begin => $Begin, CF => $CF, Item => $Item, Value => $Value, Action => $Action, Queue => $Queue, ARGS => \%ARGS);
+                          <tr> 
+                            <td class="poptable" bgcolor="#C4E1F0"> 
+                              <table width="100%" border="0" cellspacing="5" cellpadding="0">
+                                <tr> 
+                                  <td  valign="top">
+                                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                      <tr> 
+                                        <td valign=top> 
+					  <& Top, Item => $Item, List => $List &>
+                                            <tr> 
+                                              <td class="tableEmboss"  valign=top >
+						<& List, Delete => 1, List => $List, Begin => $Begin, Item => $Item, ARGS => \%ARGS &>
+                                              </td>
+                                            </tr>
+                                          </table>
+                                        </td>
+                                      </tr>
+                                    </table>
+				  </td><td width="350" class="tableEmboss" valign="top"  align="center" > 
+% $m->print($InfoHTML);
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $List = [];
+my $Item = $RT::Nothing;
+my $SubItem = $RT::Nothing;
+
+my $CustomFields = RT::CustomFields->new($session{'CurrentUser'});
+my $QueueObj = RT::Queue->new($session{'CurrentUser'});
+
+$QueueObj->Load($Queue) if $Queue;
+
+if ($QueueObj->id) {
+    $CustomFields->LimitToQueue($Queue);
+}
+else {
+    $CustomFields->LimitToGlobal;
+}
+
+if ($CF) {
+    $Item = RT::CustomField->new($session{'CurrentUser'});
+    $Item->Load( $CF );
+}
+
+if ($Action eq 'Save' and $Item) {
+    $Item->SetType($ARGS{Type}) if exists $ARGS{Type};
+    $Item->SetName($ARGS{Name}) if exists $ARGS{Name};
+    $Item->SetDescription($ARGS{Description}) if exists $ARGS{Description};
+    foreach my $attr (qw(Hints Pattern Default OnCreate OnUpdate)) {
+	$Item->SetAttribute( $attr => $ARGS{$attr}) if exists $ARGS{$attr};
+    }
+}
+elsif ($Action eq 'Add') {
+    $Item = RT::CustomField->new($session{'CurrentUser'});
+    my ($val, $msg) = $Item->Create(
+	Queue => ($Queue || 0),
+	Name => loc('(new)'),
+	Type => 'FreeformSingle',
+	Description => '',
+    );
+    Abort(loc("Could not create CustomField", $msg)) unless ($val);
+    $Item->SetSortOrder($Item->id);
+    $CF = $Item->id;
+    $Begin = -1;
+}
+elsif ($Action eq 'Delete') {
+    foreach my $Id (@ListDelete) {
+	my $item = RT::CustomField->new($session{'CurrentUser'});
+	$item->Load( $Id );
+	$item->Delete;
+    }
+    $CustomFields->RedoSearch;
+    $Item = $CustomFields->First || $RT::Nothing;
+    $Begin = $CF = 0;
+}
+elsif (($Action eq 'Up' or $Action eq 'Down') and $Item) {
+    my $Move = ($Action eq 'Down') ? 1 : -1;
+    my $TargetObj;
+    my $target_order = $Item->SortOrder + $Move;
+    while (my $CustomFieldObj = $CustomFields->Next) { 
+	my $this_order = $CustomFieldObj->SortOrder;
+
+	# if we have an exact match, finish the loop now
+	($TargetObj = $CustomFieldObj, last) if $this_order == $target_order;
+
+	# otherwise, we need to apropos toward the general direction
+	# ... first, check the sign is correct
+	next unless ($this_order - $Item->SortOrder) * $Move > 0;
+
+	# ... next, see if we already have a candidate
+	if ($TargetObj) {
+	    # ... if yes, compare the delta and choose the smaller one
+	    my $orig_delta = abs($TargetObj->SortOrder - $target_order);
+	    my $this_delta = abs($this_order - $target_order);
+	    next if $orig_delta < $this_delta;
+	}
+
+	$TargetObj = $CustomFieldObj;
+    }
+
+    if ($TargetObj) {
+	# swap their sort order
+	my ($s, $t) = ($Item->SortOrder, $TargetObj->SortOrder);
+	$TargetObj->SetSortOrder($s);
+	$Item->SetSortOrder($t);
+	# because order changed, we must redo search for subsequent uses
+	$CustomFields->RedoSearch;
+    }
+
+    $CustomFields->GotoFirstItem;
+}
+elsif ($Action eq 'ValueAdd') {
+    $Item->AddValue(
+	Name => '(new)',
+	Description => '',
+	SortOrder => $Item->Values->Count + 1,
+    );
+    $Value = $Item->Values->Last->id;
+}
+elsif ($Action eq 'ValueDelete' and $Value) {
+    $Item->DeleteValue( $Value );
+}
+
+$List = $CustomFields->ItemsArrayRef;
+$Begin = int($#$List / 16) * 16 if $Begin == -1;
+
+</%INIT>
+<%ARGS>
+$Begin => 0
+$CF => undef
+$Value => undef
+$Queue => 0
+$Action => ''
+@ListDelete => ()
+</%ARGS>

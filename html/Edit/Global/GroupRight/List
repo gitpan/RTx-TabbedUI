@@ -1,0 +1,24 @@
+%# Time flies like an arrow, but fruit flies like a banana.
+<& /Edit/Elements/List,
+    Data  => [
+	[ '30%', loc('Group Name'),	    sub { loc($_[0]->Type) || $_[0]->Name } ],
+	[ '40%', loc('Group Description'),  sub {
+	    int($_[0]->Description) ? loc('HRMSDefined') : loc($_[0]->Domain)
+	} ],
+	[ '30%', loc('Group Status'),	    sub {
+	    ($_[0] == $RT::Nothing) ? '' : $_[0]->Disabled ? loc('Disabled') : loc('Open')
+	} ],
+    ],
+    Link    => sub {
+	"index.html?Queue=$ARGS->{Queue}&Begin=$Begin&Show=$ARGS->{Show}&" .
+	( $ARGS{Prefix} ? '' : 'Foo' ) . "Group=$ARGS->{Group}&" .
+	"$ARGS{Prefix}Group=" . $_[0]->Id
+    },
+    Size    => 14,
+    Style   => "OVERFLOW: auto; WIDTH:100%",
+    %ARGS,
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

@@ -1,0 +1,123 @@
+%# Why is the alphabet in that order?  Is it because of that song?
+
+<& /Edit/Elements/PopHeader, Title => loc('Pick'), $IsWork ? (BG => '#C0EBEB') : () &>
+
+<table border="0" cellspacing="12" cellpadding="0" align="center" class="poptable">
+  <tr> 
+    <td><FIELDSET><LEGEND><&|/l&>Filter people</&></LEGEND>
+    <table border="0" cellspacing="10" cellpadding="0" align="center" width="610">
+      <tr> 
+        <td> 
+          <table border="0" cellspacing="1" cellpadding="0" align="center" >
+        <tr> 
+          <td width="58"><nobr><&|/l&>User Number</&>&nbsp;</nobr></td>
+          <td width="315"> 
+            <input type="text" name="IdMin"  style="width:128px">
+            <&|/l&>to</&> 
+            <input type="text" name="IdMax"  style="width:128px">
+            <&|/l&>number</&></td>
+	  <td width="213">&nbsp;</td>
+        </tr>
+        <tr> 
+          <td><nobr><&|/l&>Name</&>&nbsp;</nobr></td>
+          <td> 
+            <input type="text" name="Name"  style="width:274px" value="">
+          </td>
+	  <td>&nbsp;</td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Group Name</&></td>
+          <td> 
+            <select name="GroupId" style="width:274px">
+%foreach my $Group (@$List) {
+% my $name = $Group->Name or next;
+<option value="<% $Group->id %>"><% $name %></option>
+%}
+            </select>
+          </td>
+	  <td width="213">&nbsp;</td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Position Name</&></td>
+          <td> 
+            <select name="JobId" style="width:274px">
+            </select>
+          </td>
+	  <td width="213"> 
+	    <input type="button" name="Submit23222" value=" <&|/l&>Filter</&> " >
+	  </td>
+        </tr>
+	<tr> 
+	  <td colspan="3"> 
+	    <hr noshade size="1">
+	  </td>
+	</tr>
+	<tr> 
+	  <td colspan="3"> 
+	    <table border="0" cellspacing="0" cellpadding="0" align="center">
+	      <tr> 
+		<td valign="top" width="138"  height="33"> 
+		  <div align="left"> 
+		    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		      <tr> 
+			<td height="13"><&|/l&>Filtered list:</&></td>
+		      </tr>
+		    </table>
+		    <select name="Off" size="6" multiple style="width:250px;height:290px" >
+% foreach my $Item (@$OffList) {
+	      <option value="<% $Item->Id %>"><% $Item->Name %></option>
+% }
+		    </select>
+		  </div>
+		</td>
+		<& /Edit/Elements/ListButtons &>
+		<td valign="top" height="33" width="134" > 
+		  <div align="right"> 
+		    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+		      <tr> 
+			<td height="13"><&|/l&>Selected users:</&></td>
+		      </tr>
+		    </table>
+		    <div align="left"> 
+		      <select name="On" size="6" multiple style="width:250px;height:290px" >
+% foreach my $Item (@$List) {
+	      <option value="<% $Item->Id %>"><% $Item->Name %></option>
+% }
+		      </select>
+		    </div>
+		  </div>
+		</td>
+	      </tr>
+	    </table>
+	  </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</FIELDSET> 
+% if ($IsWork) {
+<table border="0" cellspacing="0" cellpadding="3" align="center" width="100%">
+  <tr> 
+    <td colspan="3"> </td>
+  </tr>
+  <tr> 
+    <td colspan="2" width="93%">
+<&|/l&>Other comma-delimited email addresses</&>
+    </td>
+  </tr>
+  <tr> 
+    <td colspan="2" width="93%"> <font color="#999999"> 
+      <input type="text" name="T1222" size="70" style="width:100%">
+      </font></td>
+  </tr>
+</table>
+% }
+</td></tr></table>
+<& /Edit/Elements/PopFooter &>
+<%INIT>
+my $List = [];
+</%INIT>
+<%ARGS>
+$IsWork	=> 1
+</%ARGS>

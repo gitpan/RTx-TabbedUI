@@ -1,0 +1,217 @@
+%# "Those who do not do politics will be done in by politics."
+%# 		-- French Proverb
+% my $Values;
+% if ($TicketObj) {
+%          $Values  = $TicketObj->CustomFieldValues($CustomField->id);
+% }
+% if ($CustomField->Type eq 'FreeformSingle') { # {{{
+      <input <% $ReadOnly %> style="<% $Style %>width:150" name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+        size="<%$Cols%>"
+% if ($TicketObj or $Value) {
+          value="<%$Value or $Values->Count ? $Values->First->Content : ''%>"
+% }
+>
+%# }}}
+% } elsif ($CustomField->Type eq 'FreeformDate') { # {{{
+      <input <% $ReadOnly %> style="<% $Style %>width:150; cursor: hand" name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+        size="<%$Cols%>" <& /Work/Elements/Date, ReadOnly => $ReadOnly &>
+% if ($TicketObj or $Value) {
+          value="<%$Value or $Values->Count ? $Values->First->Content : ''%>"
+% }
+>
+%# }}}
+% } elsif ($CustomField->Type eq 'FreeformTime') { # {{{
+      <input <% $ReadOnly %> style="<% $Style %>width:150" name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+        size="<%$Cols%>" <& /Work/Elements/Time, ReadOnly => $ReadOnly &>
+% if ($TicketObj or $Value) {
+          value="<%$Value or $Values->Count ? $Values->First->Content : ''%>"
+% }
+>
+%# }}}
+% } elsif ($CustomField->Type eq 'FreeformNumber') { # {{{
+      <input <% $ReadOnly %> style="<% $Style %>width:150" name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+        size="<%$Cols%>" <& /Work/Elements/Number, ReadOnly => $ReadOnly &>
+% if ($TicketObj or $Value) {
+          value="<%$Value or $Values->Count ? $Values->First->Content : ''%>"
+% }
+>
+%# }}}
+% } elsif ($CustomField->Type eq 'FreeformPassword') { # {{{
+      <input <% $ReadOnly %> style="<% $Style %>width:150" name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+        size="<%$Cols%>" type="password"
+% if ($TicketObj) {
+          value="<%$Values->Count ? $Values->First->Content : ''%>"
+% }
+>
+%# }}}
+% } elsif ($CustomField->Type eq 'FreeformMultiple') { # {{{
+% my $content;
+% if ($TicketObj) {
+%          while (my $value = $Values->Next ) {
+%                 $content .= $value->Content;
+%           }
+%  }
+%     $m->print($Magic);
+<textarea <% $ReadOnly %> cols=<%$Cols%> rows=<%$Rows%> name="<%$NamePrefix%><%$CustomField->Id%>-Values"><%$content%></textarea>
+%# }}}
+% } elsif ($CustomField->Type eq 'SelectSingle') { # {{{
+%     $m->print($Magic);
+      <select <% $ReadOnly && 'readonly disabled' %> style="<% $Style %>width:150"
+      name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+      id="<%$NamePrefix%><%$CustomField->Id%>-Values"
+      >
+% my $CustomFieldValues = $CustomField->Values();
+% my $selected;
+% while (my $value = $CustomFieldValues->Next) {
+        <option value="<%$value->Name%>" 
+% if ($TicketObj) {
+            <% $Values->HasEntry($value->Name) && ($selected = 'SELECTED') %>
+% } else {
+            <% $Value && ($value->Name eq $Value) && ($selected = 'SELECTED') %>
+% }
+            ><% ($Loc ? loc($value->Description) : $value->Description) %></option>
+% }
+% if ($CustomFieldValues->Count > 1) {
+        <option value="" <% !$selected && 'SELECTED' %>><% $Empty %></option>
+% }
+      </select>
+%# }}}
+% } elsif ($CustomField->Type eq 'SelectVersion') { # {{{
+%     $m->print($Magic);
+% # ---- XXX must link with planned queue versions XXX ---
+% my $selected;
+%# while (my $value = $CustomFieldValues->Next) {
+% my $Tickets = RT::Tickets->new( $session{'CurrentUser'} );
+% $Tickets->LimitQueue( VALUE => $Queue );
+% $Tickets->LimitType( VALUE => 'release' );
+% $Tickets->LimitStatus( VALUE => 'open' ) if $CustomField->Description eq 'Version';
+      <select <% $ReadOnly && 'readonly disabled' %> style="<% $Style %>width:150"
+      name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+      id="<%$NamePrefix%><%$CustomField->Id%>-Values"
+      >
+% while (my $ticket = $Tickets->Next) {
+% my $value = $ticket->Subject;
+        <option value="<%$value%>" 
+% if ($TicketObj) {
+            <% $Values->HasEntry($value) && ($selected = 'SELECTED') %>
+% } else {
+            <% $Value && ($value eq $Value) && ($selected = 'SELECTED') %>
+% }
+            ><% $value%></option>
+% }
+        <option value="" <% !$selected && 'SELECTED' %>></option>
+      </select>
+%# }}}
+% } elsif ($CustomField->Type eq 'SelectResolution') { # {{{
+%     $m->print($Magic);
+      <select <% $ReadOnly && 'readonly disabled' %> style="<% $Style %>width:150"
+      name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+      id="SelectResolution"
+      onchange="
+var val = this.options[this.selectedIndex].value;
+document.getElementById('Status').selectedIndex = (
+    (val == '') ? 0 :
+    (val == 'FIXED' || val == 'LATER') ? 5 : 6
+);
+      "
+      >
+% my $CustomFieldValues = $CustomField->Values();
+% my $selected;
+% while (my $value = $CustomFieldValues->Next) {
+        <option value="<%$value->Name%>" 
+% if ($TicketObj) {
+            <% $Values->HasEntry($value->Name) && ($selected = 'SELECTED') %>
+% } else {
+            <% $Value && ($value->Name eq $Value) && ($selected = 'SELECTED') %>
+% }
+            ><% ($Loc ? loc($value->Description) : $value->Description) %></option>
+% }
+        <option value="" <% !$selected && 'SELECTED' %>>&nbsp;</option>
+      </select>
+%# }}}
+% } elsif ($CustomField->Type eq 'SelectMultiple') { # {{{
+%     $m->print($Magic);
+% my $CustomFieldValues = $CustomField->Values();
+% my $selected;
+% while (my $value = $CustomFieldValues->Next) {
+      <input <% $ReadOnly && 'readonly disabled' %> name="<%$NamePrefix%><%$CustomField->Id%>-Values" type="checkbox" value="<% $value->Name %>"
+% if ($TicketObj) {
+            <% $Values->HasEntry($value->Name) && 'CHECKED' %>
+% } else {
+            <% $Value && ($value->Name eq $Value or (ref $Value and grep { $value->Name eq $_} @$Value)) && 'CHECKED' %>
+% }
+      >
+      <% $Loc ? loc($value->Description) : $value->Description %><br>
+% }
+%# }}}
+% } elsif ($CustomField->Type eq 'FreeformExternal') { # {{{
+      <input <% $ReadOnly %> style="<% $Style %>width:150" name="<%$NamePrefix%><%$CustomField->Id%>-Values"
+        size="<%$Cols%>" class="wro" readonly
+% if ($TicketObj) {
+          value="<%eval{$TicketObj->FirstRequestor->get($CustomField->Description)}%>"
+% } else {
+          value="<%$session{CurrentUser}->UserObj->get($CustomField->Description)%>"
+% }
+>
+%# }}}
+% } elsif ($CustomField->Type eq 'SelectExternal') { # {{{
+%     $m->print($Magic);
+      <select <% $ReadOnly && 'readonly disabled' %> style="<% $Style %>width:150" name="<%$NamePrefix%><%$CustomField->Id%>-Values">
+%   my $UserObj = eval { $TicketObj->FirstRequestor } || $session{CurrentUser}->UserObj;
+%   my @SubHash = $UserObj->field_values($CustomField->Description);
+%   my $count = @SubHash;
+%   my $selected;
+%   while (my ($v, $descr) = splice(@SubHash, 0, 2)) {
+        <option value="<%$v%>" 
+% if ($TicketObj) {
+            <% $Values->HasEntry($v) && ($selected = 'SELECTED') %>
+% } else {
+            <% $Value && ($v eq $Value) && ($selected = 'SELECTED') %>
+% }
+            ><% $descr %></option>
+%   }
+% if ($count > 2) {
+        <option value="" <% !$selected && 'SELECTED' %>><% $Empty %></option>
+% }
+      </select>
+%# }}}
+% }
+
+% return if $ReadOnly;
+
+% if ($m->notes("InvalidField-" . $CustomField->Id)) {
+<font color="red">*</font>
+% }
+% if (my $hints = $CustomField->Attribute('Hints')) {
+<em><% $Loc ? loc($hints) : $hints %></em>
+% }
+<%INIT>
+my $Magic = '';
+my $Empty = '(' . loc('Please Select') . ')';
+if ($ReadOnly) {
+    $ReadOnly = ' readonly ';
+    $Style = "border: 0; color: black; background: transparent; ";
+    $Empty = '';
+    $Magic = "<input type='hidden' name='$NamePrefix".
+	    $CustomField->Id.
+	    "-Values' value='".
+	    ($Value ||
+	    eval { $TicketObj->CustomFieldValues($CustomField->Id)->First->Content }) .
+	    "'>" if $CustomField->Type eq 'SelectSingle';
+}
+else {
+    $Magic = "<input type='hidden' name='$NamePrefix".$CustomField->Id."-Values-Magic' value='1'>";
+}
+</%INIT>
+<%ARGS>
+$ReadOnly => undef
+$Value => undef
+$TicketObj => undef
+$CustomField => undef
+$NamePrefix => undef
+$Loc => undef
+$Queue => undef
+$Rows => 3
+$Cols => 15
+$Style => ''
+</%ARGS>

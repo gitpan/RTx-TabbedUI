@@ -1,0 +1,121 @@
+%# It is the business of the future to be dangerous.
+%# 		-- Hawkwind
+<& /Edit/Elements/PopHeader, Title => loc('Edit Subgroups') &>
+
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+
+<table width="100%" border="0" cellspacing="5" cellpadding="0" class="poptable">
+  <tr>
+    <td>
+      <table border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td valign="top" width="155" height="2"> 
+            <div align="left"><&|/l&>Current Groups:</&></div>
+          </td>
+          <td width="80" height="2">&nbsp; </td>
+          <td valign="top" height="2" width="158"><&|/l&>Create Subgroup:</&></td>
+        </tr>
+        <tr> 
+          <td valign="top">
+            <select name="Off" size="20" multiple style="width:235px;height:285px">
+% foreach my $Item (@$OffList) {
+	      <option value="<% $Item->Id %>"><% $Item->Name %></option>
+% }
+            </select>
+          </td>
+	  <& /Edit/Elements/ListButtons &>
+          <td valign="top" height="32">
+            <select name="On" size="20" multiple style="width:235px;height:285px">
+% foreach my $Item (@$List) {
+	      <option value="<% $Item->Id %>"><% $Item->Name %></option>
+% }
+            </select>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<& /Edit/Elements/PopFooter &>
+<%INIT>
+my $List = $session{MemberList};
+my $OffList = $session{MemberOffList};
+my $Object = RT::Group->new($session{'CurrentUser'});
+$Object->Load($Group);
+
+if (!$Continuation) {
+    my %seen;
+    my $Members = $Object->MembersObj || $RT::Nothing;
+    $Members->LimitToGroups;
+    $List = [ map { $_->MemberObj->Object } @{$Members->ItemsArrayRef} ] || [];
+    $seen{$_->Id}++ for @$List;
+
+    $OffList = [];
+    my $Groups = RT::Groups->new($session{'CurrentUser'});
+    $Groups->LimitToUserDefinedGroups();
+    while (my $Group = $Groups->Next) {
+	next if $Group->Description;
+	next if $seen{$Group->Id};
+	next if $Group->Id eq $Object->Id;
+	next if $Group->HasMemberRecursively($Object->PrincipalObj);
+	push @$OffList, $Group;
+    }
+}
+elsif ($Action eq 'Add') {
+    @$OffList = grep {
+	my $id = $_->Id;
+	my $ok = (grep { $_ == $id } @Off);
+	push @$List, $_ if $ok;
+	!$ok;
+    } @$OffList;
+}
+elsif ($Action eq 'AddAll') {
+    push @$List, @$OffList;
+    @$OffList = ();
+}
+elsif ($Action eq 'Delete') {
+    @$List = grep {
+	my $id = $_->Id;
+	my $ok = (grep { $_ == $id } @On);
+	push @$OffList, $_ if $ok;
+	!$ok;
+    } @$List;
+}
+elsif ($Action eq 'DeleteAll') {
+    push @$OffList, @$List;
+    @$List = ();
+}
+elsif ($Action eq 'Commit') {
+    $Member ||= 0;
+    foreach my $item (@$OffList) {
+	$Object->DeleteMember( $item->PrincipalId );
+    }
+    foreach my $item (@$List) {
+	$Object->AddMember( $item->PrincipalId );
+    }
+
+    $m->print("<script>opener.location.reload();window.close();</script>");
+    $m->abort;
+}
+
+@$OffList = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => $_->Name ] } @$OffList );
+@$List = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => $_->Name ] } grep { $_->Name } @$List );
+$session{MemberList} = $List;
+$session{MemberOffList} = $OffList;
+</%INIT>
+<%ARGS>
+$SubJob => ''
+$Show => ''
+$Queue => 0
+$Group => 0
+$Member => ''
+$Action => ''
+$Begin => 0
+$ReadOnly => 0
+$Continuation => 0
+$Fixed => 0
+@On => ()
+@Off => ()
+</%ARGS>

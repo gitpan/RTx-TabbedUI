@@ -1,0 +1,80 @@
+%# Real computer scientists don't comment their code.  The identifiers are
+%# so long they can't afford the disk space.
+
+<TABLE BORDER=1 WIDTH=100%>
+%# THEAD
+<TR>
+<THEAD>
+% foreach my $cf (@CustomFields) {
+%     my $descr = $session{CurrentUser}->UserObj->field_cname($cf->Description)
+%         if $cf->Type eq 'EntryExternal';
+<TH ALIGN=LEFT><A TITLE="<% $cf->Name %>"><% $descr || $cf->Description || $cf->Name %></A></TH>
+% }
+% if (!$ReadOnly) {
+<TH ALIGN=LEFT><A TITLE="<&|/l&>Check box to delete</&>"><&|/l&>(delete)</&></A></TH>
+% }
+</THEAD>
+</TR>
+
+%# current values
+% foreach my $row (0 .. $LastIndex) {
+<TR>
+%     foreach my $col (@Current) {
+<TD><% $col->[$row] %></TD>
+%     }
+%     if (!$ReadOnly) {
+<TD ALIGN=LEFT><INPUT TYPE="CHECKBOX" NAME="DeleteEntry-<%$row%>"></TD>
+%     }
+</TR>
+% }
+
+%# final row
+%if (!$ReadOnly) {
+<TR>
+% foreach my $cf (@CustomFields) {
+<TD>
+%   my $Name = $Prefix . $cf->Id . $Postfix;
+%   if ($cf->Type eq 'EntryFreeform') {
+<INPUT STYLE="width: 100%" NAME="<% $Name %>">
+%   } else {
+<SELECT STYLE="width: 100%" NAME="<% $Name %>">
+<OPTION VALUE="">-</OPTION>
+%     my $CustomFieldValues = $cf->Values;
+%     while (my $value = $CustomFieldValues->Next) {
+<OPTION VALUE="<% $value->Name %>"><% $value->Description || $value->Name %></OPTION>
+%     }
+</SELECT>
+%   }
+</TD>
+% }
+<TD ALIGN=LEFT><INPUT STYLE="width: 100%" TYPE="SUBMIT" NAME="AddMoreEntry" VALUE="<&|/l&>Add Entry</&>"></TD>
+</TR>
+%}
+</TBODY></TABLE>
+<%INIT>
+my @Current;
+my $LastIndex = -1;
+foreach my $cf (@CustomFields) {
+    my $values;
+    if ($TicketObj) {
+	$values = [ map {
+	    $_->Content
+	} @{$TicketObj->CustomFieldValues($cf->Id)->ItemsArrayRef} ];
+    }
+    elsif (exists $TempValues->{$cf->Id}) {
+	$values = $TempValues->{$cf->Id};
+    }
+
+    push @Current, $values;
+    $LastIndex = $#{$values} if $#{$values} > $LastIndex;
+}
+
+</%INIT>
+<%ARGS>
+$Prefix => ''
+$Postfix => ''
+$ReadOnly => undef
+$TicketObj => undef
+@CustomFields => ()
+$TempValues => undef
+</%ARGS>

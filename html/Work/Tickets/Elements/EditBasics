@@ -1,0 +1,77 @@
+%# The reason computer chips are so small is computers don't eat much.
+
+<tr> 
+  <td height="20" colspan="2" style="padding-top: 0">
+<table width="100%" border="0" cellspacing="1" cellpadding="2" class="tableemboss">
+    <TR>
+	<TD class="tableTitle">
+	    <&|/l&>Subject</&>:
+	</TD>
+	<TD class="poptable" bgcolor="white" colspan="3">
+	    <input name=Subject value="<%$TicketObj->Subject|h%>" SIZE=50>
+	</TD>
+    </TR>
+    <TR>
+        <& ShadedBox,
+            title => loc('Queue'),
+            content => "$SelectQueue" &>
+        <& ShadedBox, 
+            title => loc('Status'),
+            content => $SelectStatus &>
+    </TR>
+    <TR>
+        <& ShadedBox,
+	    title => loc('Time Worked'),
+	    content => "<input name=TimeWorked value=\"".$TicketObj->TimeWorked."\" SIZE=5>" &>
+    <TD class="tableTitle"><&|/l&>Starts</&>:</TD>
+    <TD class="poptable" bgcolor="white"><& /Elements/SelectDate, menu_prefix => 'Starts', current => 0 &> 
+        (<% $TicketObj->StartsObj->AsString %>)</TD>
+  </TR>
+  <TR>
+        <& ShadedBox,
+	    title => loc('Time Left'),
+	    content => "<input name=TimeLeft value=\"".$TicketObj->TimeLeft."\" SIZE=5>" 
+&>
+    <TD class="tableTitle"><&|/l&>Started</&>:</TD>
+    <TD class="poptable" bgcolor="white"><& /Elements/SelectDate, menu_prefix => 'Started', current => 0 &> (<%$TicketObj->StartedObj->AsString %>)</TD>
+  </TR>
+
+  <TR>
+        <& ShadedBox,
+	    title => loc('Priority'),
+	    content => "<input name=Priority value=\"".$TicketObj->Priority."\" SIZE=3>" &>
+    <TD class="tableTitle">
+      <&|/l&>Last Contact</&>:
+    </TD>
+    <TD class="poptable" bgcolor="white">
+      <& /Elements/SelectDate, menu_prefix => 'Told', current => 0 &> (<% $TicketObj->ToldObj->AsString %>)
+    </TD>
+  </TR>
+  <TR>
+        <& ShadedBox,
+	    title => loc('Final Priority'),
+	    content => "<input name=FinalPriority value=\"".$TicketObj->FinalPriority."\" SIZE=3>" &>
+    <TD class="tableTitle"><&|/l&>Due</&>:</TD>
+    <TD class="poptable" bgcolor="white">
+      <& /Elements/SelectDate, menu_prefix => 'Due', current => 0 &> (<% $TicketObj->DueObj->AsString %>)
+    </TD>
+  </TR>
+</TABLE>
+</td></tr>
+<TR>
+<TD colspan="2" class="tableTitle">
+    <input type="submit" name="Action-Basics" value="<&|/l&>Save</&>">
+</TD>
+</TR>
+
+<%INIT>
+$TicketObj ||= $Ticket;
+#It's hard to do this inline, so we'll preload the html of the selectstatus in here.
+my $SelectStatus = $m->scomp("/Elements/SelectStatus", Name => 'Status', Default=> $TicketObj->Status);
+my $SelectQueue = $m->scomp("/Elements/SelectQueue", Name => 'Queue', Default =>$TicketObj->QueueObj->Id);
+
+</%INIT>
+<%ARGS>
+$Ticket => undef
+$TicketObj => undef
+</%ARGS>

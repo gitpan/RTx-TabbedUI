@@ -1,0 +1,17 @@
+%# Remember that whatever misfortune may be your lot, it could only be
+%# worse in Cleveland.
+%#		-- National Lampoon, "Deteriorata"
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '20%', loc('Template Name'),		sub { loc($_[0]->Name) } ],
+	[ '30%', loc('Template Description'),	sub { loc($_[0]->Description) } ],
+	[ '50%', loc('Template Content'),	sub { "$1..." if $_[0]->Content =~ /(.{1,45})/m } ],
+    ],
+    Link    => sub { "index.html?Queue=$ARGS->{Queue}&Begin=$Begin&Template=" . $_[0]->Id },
+    Size    => 8,
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

@@ -1,0 +1,141 @@
+%# Your life would be very empty if you had nothing to regret.
+
+% my $Window = 'frm' . int(rand(10000));
+<& /Edit/Elements/104Header,
+    OnLoad => (
+	(keys %ARGS > 1 and !$ARGS{cname})
+	    ? ''
+	    : $m->scomp('/Edit/Elements/NewWindow', "Search.html?Target=$Window", 500, 280, $Window)
+    ),
+    Buttons => [
+	Add => '',
+	Save => '',
+	Delete => '',
+	Copy => '',
+	Search => $m->scomp('/Edit/Elements/NewWindow', "Search.html?Target=$Window", 500, 280, $Window),
+    ],
+&>
+<script><!--
+window.name="frmMAIN";
+--></script>
+
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Users' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%" >
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" class="tableEmboss" style="table-layout:fixed"><COL width=""><COL width=15><COL width=415>
+              <tr> 
+                <td width="" valign="top" class="poptable" id="cssfrom" name="cssfrom"> 
+		  <& Top, Item => $Item &>
+		  <& List, List => $List, Begin => $Begin, Item => $Item, Show => $Show, ARGS => \%ARGS &>
+                </td>
+                <td width="20" align="right"> 
+                  <div align="right"><img src="/img/ArrowLevelGray.png" width="13" height="25" alt="&gt;"></div>
+                </td>
+                <td valign="top"> 
+                  <table border="0" cellspacing="4" cellpadding="0" width="100%">
+                    <tr>
+                      <td valign="top">
+			<table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+			    <tr><td width="100%">
+			    <& /Edit/Elements/Tabs, Map => $Map, Show => $Show, Begin => $Begin, User => $User &>
+			    </td></tr>
+			    <& $Show, %ARGS, Item => $Item &>
+			</table>
+		      </td>
+		    </tr>
+		    </table>
+		</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $List = [];
+$Show ||= 'Info';
+die unless $Show =~ /^(?:Info|System|Group|Queue|Delegate)$/;
+
+if ($DoSearch) {
+    my $users = RT::Users->new($session{'CurrentUser'});
+    $users->{'find_disabled_rows'} = 1 if $FindDisabledUsers;
+    $users->Limit( FIELD => 'ExternalAuthId', OPERATOR => '!=', VALUE => '0');
+    if ($Limit) {
+	$users->Limit( FIELD => 'Email', OPERATOR => 'LIKE', VALUE => $Email )
+	    if length $Email;
+	$users->Limit( FIELD => 'Name', OPERATOR => 'LIKE', VALUE => $Name )
+	    if length $Name;
+    }
+
+    $List = $users->ItemsArrayRef;
+
+    if ($Limit) {
+	if ($GroupId) {
+	    my $Group = RT::Group->new($session{'CurrentUser'});
+	    $Group->Load($GroupId) || Abort(loc('Could not load group' . $GroupId));
+	    my $department = $Group->Description;
+	    @$List = grep { $_->val('department') == $department } @$List;
+	}
+	if ($IdMin and $IdMax) {
+	    @$List = grep {
+		$_->get('no') ge $IdMin
+		    and
+		$_->get('no') le $IdMax 
+	    } @$List;
+	}
+	elsif ($IdMin or $IdMax) {
+	    my $Id = $IdMin || $IdMax;
+	    @$List = grep { $_->get('no') eq $Id } @$List;
+	}
+    }
+
+    # Schwartzian transform!
+    @$List = (
+	map { $_->[0] }
+	sort { $a->[1] cmp $b->[1] }
+	map { [ $_->Id => $_->get('no') ] }
+	@$List
+    );
+
+    $session{'CurrentEditUserSearch'} = [ @$List ];
+}
+elsif ( keys %ARGS > 1 and !$ARGS{cname} ) {
+    $List = $session{'CurrentEditUserSearch'} || [];
+}
+
+my $Item = $RT::Nothing;
+if ($User) {
+    $Item = RT::User->new($session{'CurrentUser'});
+    $Item->Load( $User );
+}
+
+my $Map = [
+    Info	=> 'Basics',	    # loc
+    System	=> 'System Rights', # loc
+    Group	=> 'Group Rights',  # loc
+    Queue	=> 'Queue Rights',  # loc
+    Delegate	=> 'Delegates',	    # loc
+];
+
+</%INIT>
+<%ARGS>
+$DoSearch => undef
+$Limit => undef
+$IdMin => undef
+$IdMax => undef
+$Name => undef
+$Email => undef
+$GroupId => undef
+$FindDisabledUsers => 0
+$Begin => 0
+$User => undef
+$Show => 'Info'
+</%ARGS>

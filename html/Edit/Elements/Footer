@@ -1,0 +1,11 @@
+%# You worry too much about your job.  Stop it.
+%# You're not paid enough to worry.
+</td></tr></table></td></tr></table>
+<div class="bpscredits">
+% if ($RT::OIN104 and Win32::NodeName() eq 'EDKM') {
+<a href='/Work/Copyright.html' target='_blank'>&copy;</a>
+% } else {
+<a href='/Work/Copyright.html' target='_blank'>Copyright Information</a>
+% }
+</div>
+% $m->abort;

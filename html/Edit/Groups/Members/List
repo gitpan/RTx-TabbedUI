@@ -1,0 +1,24 @@
+%# Anyone who uses the phrase "easy as taking candy from a baby" has never
+%# tried taking candy from a baby.
+%# 		-- Robin Hood
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '50%', loc('Role Name'),	sub {
+	    $_[0]->{Name} || (%{$_[0]} ? '('.loc('none').')' : '')
+	} ],
+	[ '50%', loc('Role Members'),	sub {
+	    join(',', map $_->Name, @{$_[0]->{Members}})
+	} ],
+    ],
+    Link    => sub {
+	"index.html?Queue=$ARGS{Queue}&Group=$ARGS{Group}&Begin=$ARGS{PreBegin}&BeginMember=$Begin&Show=$ARGS{Show}&Member=" . $_[0]->{Id}
+    },
+    Size    => 5,
+    Post    => 'Member',
+    Item    => $ARGS{Item} || {}
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

@@ -1,0 +1,14 @@
+%# "We'll cross out that bridge when we come back to it later."
+
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Children</&>
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td>
+<& ShowMember, Ticket => $Ticket &>
+</td></tr>
+
+<%INIT>
+return unless $Ticket->Members->Count;
+</%INIT>
+<%ARGS>
+$Ticket
+</%ARGS>

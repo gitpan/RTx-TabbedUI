@@ -1,0 +1,216 @@
+%# Real Users never know what they want, but they always know when your
+%# program doesn't deliver it.
+
+<& /Edit/Elements/104Header,
+    Buttons => [
+	Add => "index.html?Queue=$Queue&Action-Add=1&Entry=$Entry",
+	Save => ($Entry ? "javascript:document.getElementById('mainform').submit()" : ''),
+	Delete => ($Entry ? "index.html?Queue=$Queue&Entry=$Entry&Parent=$Parent&Action-Delete=1" : ''),
+	Copy => '',
+	Search => '',
+	Import => $m->scomp('/Edit/Elements/NewWindow', "Import.html?Queue=$Queue", 650, 290),
+	Export => $m->scomp('/Edit/Elements/NewWindow', "Export.html?Queue=$Queue", 650, 290),
+    ],
+    Method => 'POST',
+&>
+
+<input type="hidden" name="Parent" value="<% $Parent %>">
+<input type="hidden" name="Entry" value="<% $Entry %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+
+% if ($Queue) { $m->print($m->content) } else {
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Global' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4">
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+                          <tr> 
+			    <td ><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '../Workflow/' &></td>
+                          </tr>
+% }
+                          <tr> 
+                            <td class="poptable" bgcolor="#C4E1F0"> 
+                              <table width="100%" border="0" cellspacing="4" cellpadding="0">
+                                <tr> 
+                                  <td  valign="top"> 
+                                    <table width="100%" border="0" cellspacing="3" cellpadding="0">
+                                      <tr> 
+                                        <td class="tableEmboss"  valign=top > 
+					<& Top, List => $List, Item => $Item, ParentItem => $ParentItem, QueueObj => $QueueObj, Queue => $Queue &>
+                                        </td>
+                                      </tr>
+                                      <tr> 
+                                        <td class="tableEmboss" bgcolor="#FFFFFF"  valign=top><div style="height:235px; overflow:auto">
+% $m->print($ListHTML);
+					</div></td>
+                                      </tr>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+require RT::Workflow;
+
+my $Scrips = RT::Scrips->new($session{'CurrentUser'});
+my $Workflows = RT::Templates->new($session{'CurrentUser'});
+my $QueueObj = RT::Queue->new($session{'CurrentUser'});
+$QueueObj->Load($Queue) if $Queue;
+
+if ($QueueObj->Id) {
+    $Workflows->LimitToQueue($Queue);
+    $Scrips->LimitToQueue($Queue);
+}
+else {
+    $Workflows->LimitToGlobal();
+    $Scrips->LimitToGlobal();
+}
+
+$Workflows->Limit( FIELD => 'Content', VALUE => '%===Create-Ticket:%', OPERATOR => 'LIKE' );
+
+my $List = RT::Workflow->new($session{'CurrentUser'});
+if ( $Workflows->Count ) {
+    $List->Load( $Workflows->First->Id );
+    eval { $List->TemplateObj->_expire( $List->TemplateObj->_gen_primary_cache_key()) };
+}
+else {
+    $List->Create( Queue => $Queue, Name => 'Default Approval' );
+}
+
+# now check for activation scrips
+my $HasFlow;
+while (my $Scrip = $Scrips->Next) {
+    next unless $Scrip->ScripActionObj and $Scrip->ScripActionObj->Name eq 'Create Tickets';
+    $HasFlow = 1;
+    last;
+}
+
+if (!$HasFlow) {
+    my $Item = RT::Scrip->new($session{'CurrentUser'});
+    my ($val, $msg) = $Item->Create(
+	Queue => $Queue,
+	Description => ($Queue ? 'Default Approval' : 'Global Approval'),
+	ScripAction => 'Create Tickets',
+	ScripCondition => 'On Create',
+	Template => $List->TemplateObj->Id,
+	CustomPrepareCode => '',
+	CustomCommitCode => '',
+	CustomIsApplicableCode => '',
+    );
+    Abort(loc("Could not create Scrip", $msg)) unless ($val);
+}
+
+$m->comp('/Edit/Elements/CreateApprovalsQueue');
+
+my $Item = $List->Entries->{$Entry} if $Entry;
+my $ParentItem = $Parent ? $List->Entries->{$Parent} : $List;
+
+if ($Action eq 'Delete') {
+    # do major magic here.
+    $Entry = $Parent;
+    $ParentItem->DeleteChild($Item->Id);
+    if ($Entry) {
+	$Item = $List->Entries->{$Entry};
+	$Parent = $Entry;
+	$Parent =~ s/\.\d+$//;
+	$ParentItem = $List->Entries->{$Parent} || $List;
+    }
+    $List->Save;
+}
+elsif ($Action eq 'Add') {
+    $ParentItem = $Item;
+    $Item = RT::WorkflowEntry->new($session{CurrentUser});
+    $Item->SetType('approval');
+    $Item->SetOwnerClass('owner');
+    my $rand = rand();
+    $Item->SetSubject($rand);
+    $Item->{Id} = 'new';
+    if ($ParentItem) {
+	$ParentItem->{NextStates} .= ",new";
+	$Parent = $ParentItem->Id;
+    }
+    else {
+	$ParentItem = $List;
+	$Parent = undef;
+    }
+    $List->Entries->{new} = $Item;
+    $List->Parse($List->Dump);
+    $Item = (grep { $_->Subject eq $rand } values %{$List->Entries})[0];
+    $Item->SetSubject('new');
+    $Entry = $Item->Id;
+    $List->Save;
+}
+elsif ($Action eq 'Save' and $Entry) {
+    foreach my $method (grep /^Set/, keys %ARGS) {
+	$Item->{substr($method, 3)} = $ARGS{$method};
+    }
+
+    my %Field;
+    foreach my $method (grep /^FieldSet/, keys %ARGS) {
+	$Field{substr($method, 8)} = $ARGS{$method} if length($ARGS{$method});
+    }
+
+    $Field{fields} = join(',', @{$Field{fields}})
+	if UNIVERSAL::isa($Field{fields}, 'ARRAY');
+    $Item->SetConditionFields(join(',', map { s/,/./g; $_ } %Field)) if %Field;
+    $Item->SetActionFields(join(',', @{$Item->{ActionFields}}))
+	if UNIVERSAL::isa($Item->{ActionFields}, 'ARRAY');
+
+    if (my $Alias = $List->Entries->{$Item->{AliasFor}}) {
+	delete $List->Entries->{$Item->Id} unless $Item->Parents > 1;
+
+	$ParentItem->{NextStates} = join(',',
+	    $Alias->Id,
+	    grep { $_ ne $Item->Id } split(/,/, ($ParentItem->{NextStates} || ''))
+	);
+	my $rand = rand();
+	my $alias_subj = $Alias->Subject;
+	my $parent_subj = $ParentItem->Subject;
+	$Alias->SetSubject($rand) if $Alias;
+	$ParentItem->SetSubject("p$rand");
+	$List->Parse($List->Dump);
+	$Item = (grep { $_->Subject eq $rand } values %{$List->Entries})[0];
+	$Item->SetSubject($alias_subj);
+	$ParentItem = (grep { $_->Subject eq "p$rand" } values %{$List->Entries})[0];
+	$ParentItem->SetSubject($parent_subj) if $ParentItem;
+	$Parent = $ParentItem->Id if $ParentItem;
+	$Entry = $Item->Id if $Item;
+    }
+    $List->Save;
+}
+
+my $ListHTML = $m->scomp('List', List => $List, Item => $Item, ParentItem => $ParentItem, Queue => $Queue);
+
+</%INIT>
+<%ARGS>
+$Entry => undef
+$Parent => undef
+$Queue => 0
+$Action => ''
+</%ARGS>

@@ -1,0 +1,36 @@
+<SELECT <% $disabled %> NAME=<%$Name%> style="width:100%">
+%while  (my $Template = $PrimaryTemplates->Next) {
+<OPTION VALUE=<%$Template->Id%>
+<% ($Template->Id == $Default) && 'SELECTED' %>
+><% loc($Template->Name) %>
+</OPTION>
+%}
+%while  (my $Template = $OtherTemplates->Next) {
+<OPTION VALUE=<%$Template->Id%>
+<% ($Template->Id == $Default)  && 'SELECTED'%>
+><&|/l, loc($Template->Name) &>Global template: [_1]</&>
+</OPTION>
+%}
+</SELECT>
+
+<%INIT>
+
+
+my $PrimaryTemplates = RT::Templates->new($session{'CurrentUser'});
+if ($Queue != 0) {
+$PrimaryTemplates->LimitToQueue($Queue);
+}
+
+my $OtherTemplates = RT::Templates->new($session{'CurrentUser'});
+$OtherTemplates->LimitToGlobal($DefaultQueue);
+
+</%INIT>
+<%ARGS>
+
+$Queue => undef
+$Default => 'none'
+$DefaultQueue => undef
+$Name => 'Template'
+$disabled => ''
+
+</%ARGS>

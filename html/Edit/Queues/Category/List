@@ -1,0 +1,16 @@
+%# The advertisement is the most truthful part of a newspaper
+%# 		-- Thomas Jefferson
+<& /Edit/Elements/List,
+    %ARGS,
+    Data    => [
+	[ '100%', loc('Ticket Type'),	    sub { ref($_[0]) ? '' : $_[0] } ],
+    ],
+    Link    => sub { "/Edit/Queues/Category/index.html?Category=$_[0]" },
+    Size    => 18,
+    Delete  => sub { $Categories->{$_[0]} ? 'disabled' : 1 },
+&>
+<%ARGS>
+$Begin	    => 0
+$Categories => {}
+$ARGS	    => {}
+</%ARGS>

@@ -1,0 +1,135 @@
+%# "Of _course_ it's the murder weapon.  Who would frame someone with a fake?"
+
+<& /Edit/Elements/104Header,
+    Buttons => [
+	Add => "index.html?Queue=$Queue&Action-Add=1",
+	Save => ($Template ? "javascript:document.getElementById('mainform').submit()" : ''),
+	Delete => 1,
+	Copy => '',
+	Search => '',
+    ],
+    Method => 'POST',
+&>
+
+<input type="hidden" name="Template" value="<% $Template %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+
+% if ($Queue) { $m->print($m->content) } else {
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Global' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4">
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+                          <tr> 
+			    <td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '../Template/' &></td>
+                          </tr>
+% }
+                          <tr> 
+                            <td class="poptable" bgcolor="#C4E1F0"> 
+                              <table width="100%" border="0" cellspacing="4" cellpadding="0">
+                                <tr> 
+                                  <td height="480" valign="top"> 
+                                    <table width="100%" border="0" cellspacing="3" cellpadding="0">
+                                      <tr> 
+                                        <td class="tableEmboss" align=center valign=top height=205> 
+					  <& Top, Item => $Item, List => $List &>
+                                        </td>
+                                      </tr>
+                                    </table>
+				    <& List, Delete => 1, List => $List, Begin => $Begin, Item => $Item, ARGS => \%ARGS &>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $List = [];
+my $Item = $RT::Nothing;
+
+my $Templates = RT::Templates->new($session{'CurrentUser'});
+my $QueueObj = RT::Queue->new($session{'CurrentUser'});
+my @actions;
+
+if ($Queue)  {
+        $QueueObj->Load($Queue);                        
+}
+
+if ($QueueObj->id) {
+	$Templates->LimitToQueue($Queue);
+}                                            
+else {                                       
+        $Templates->LimitToGlobal();
+}                                           
+
+$Templates->Limit( FIELD => 'Content', VALUE => '%===Create-Ticket:%', OPERATOR => 'NOT LIKE' );
+
+if ($Template) {
+    $Item = RT::Template->new($session{'CurrentUser'});
+    $Item->Load( $Template );
+}
+
+if ($Action eq 'Save' and $Item) {
+    $Item->SetName($ARGS{Name}) if exists $ARGS{Name};
+    $Item->SetDescription($ARGS{Description}) if exists $ARGS{Description};
+    $Item->SetContent($ARGS{Content}) if exists $ARGS{Content};
+}
+elsif ($Action eq 'Add') {
+    $Item = RT::Template->new($session{'CurrentUser'});
+    my ($val, $msg) = $Item->Create(
+	Queue => $Queue,
+	Name => loc('(new)'),
+	Description => '',
+	Content => ''
+    );
+    Abort(loc("Could not create Template", $msg)) unless ($val);
+    $Template = $Item->id;
+    $Begin = -1;
+}
+elsif ($Action eq 'Delete') {
+    foreach my $Id (@ListDelete) {
+	my $item = RT::Template->new($session{'CurrentUser'});
+	$item->Load( $Id );
+	$item->Delete;
+    }
+    $Templates->RedoSearch;
+    $Item = $Templates->First || $RT::Nothing;
+    $Begin = $Template = 0;
+}
+
+$List = $Templates->ItemsArrayRef;
+$Begin = int($#$List / 8) * 8 if $Begin == -1;
+
+</%INIT>
+<%ARGS>
+$Begin => 0
+$Template => undef
+$Queue => 0
+$Action => ''
+@ListDelete => ()
+</%ARGS>

@@ -1,0 +1,38 @@
+%# According to the obituary notices, a mean and unimportant person never dies.
+
+  <tr> 
+    <td class="tableEmboss">
+      <table width="100%" border="0" cellspacing="3" cellpadding="0" >
+        <tr> 
+          <td  valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+	      <tr >
+		<td>
+		  <& /Work/Delegates/Info, %args &>
+		</td>
+	      </tr>
+	      <tr  valign="bottom">
+		<td>
+		  <& /Work/Delegates/List, %args &>
+		</td>
+	      </tr>
+	    </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr><%INIT>
+my %args = $m->comp('/Work/Delegates/index.html', %ARGS, NoUI => 1, CurrentUser => $Item);
+$args{URL} = "index.html?Show=Delegate&User=" . $Item->Id . "&Begin=$Begin&BeginDelegate=$BeginDelegate&";
+$args{UID} = $Item->Id;
+$args{BID} = $Begin;
+$args{Post} = 'Delegate';
+$args{Begin} = $BeginDelegate;
+$args{ARGS} = { PreBegin => $Begin };
+$args{List} = [] if ($Item == $RT::Nothing);
+</%INIT>
+<%ARGS>
+$Item	=> $RT::Nothing
+$Begin	=> 0
+$BeginDelegate => 0
+</%ARGS>

@@ -1,0 +1,12 @@
+%# Somewhere, just out of sight, the unicorns are gathering.
+
+<TD class="tableTitle">
+<%$title |n %>:
+</TD>
+<TD class="poptable" bgcolor="white">
+<%$content |n %>
+</TD>
+<%ARGS>
+$title => undef
+$content => "&nbsp;"
+</%ARGS>

@@ -1,0 +1,17 @@
+%# Life is like an analogy
+
+<& ShowBasics, Ticket => $Ticket &>
+<tr valign="top"><td valign="top"><table border="0" cellspacing="0" cellpadding="0" width=100%>
+<& EditCustomFields, Ticket => $Ticket, ReadOnly => 1, Loc => $Loc, NoCF => $NoCF &>
+% if (!$RT::OIN104) {
+</table></td><td align="right"><table border="0" cellspacing="0" cellpadding="0">
+<& ShowLinks, Ticket => $Ticket &>
+% }
+</table></td></tr>
+
+<%ARGS>
+$Ticket => undef
+$ReadOnly => undef
+$Loc => 0
+$NoCF => {}
+</%ARGS>

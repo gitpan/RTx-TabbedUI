@@ -1,0 +1,25 @@
+%# If little green men land in your back yard, hide any little green women
+%# you've got in the house.
+%# 		-- Mike Harding, "The Armchair Anarchist's Almanac"
+<%INIT>
+my $QueueObj = $RT::Nothing;
+if ($ARGS{Queue}) {
+    $QueueObj = RT::Queue->new($session{CurrentUser});
+    $QueueObj->Load($ARGS{Queue}) or Abort(loc("Queue could not be loaded."));
+}
+
+$m->call_next(Map => [
+    '/Edit/Queues/'		=> 'Overview',
+    '/Edit/Queues/Category/'	=> 'Categories',
+    '/Edit/Queues/Basic/'	=> 'Configuration',
+], Map2 => [
+    ''			=> "Queue=$ARGS{Queue}",
+    '../Basic/'		=> 'Basics',		# loc
+    '../CustomField/'	=> 'Custom Fields',	# loc
+    '../Template/'	=> 'Templates ',	# loc
+    '../Scrip/'		=> 'Scrips ',		# loc
+    '../Workflow/'	=> 'Workflows',		# loc
+    '../UserRight/'	=> 'User Rights',	# loc
+    '../GroupRight/'	=> 'Group Rights',	# loc
+], QueueObj => $QueueObj, %ARGS);
+</%INIT>

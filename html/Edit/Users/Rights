@@ -1,0 +1,30 @@
+%# "Pascal is not a high-level language." -- Steven Feiner
+
+% while (my $right = $ACLObj->Next) {
+%     next if $right->RightName eq 'SuperUser';
+      <OPTION><% loc($right->RightName) %></OPTION>
+% }
+
+<%INIT>
+    my ($right, $ACLDesc, $AppliesTo, %Rights);
+
+    my $princ = RT::Principal->new($RT::SystemUser);
+    $princ->Load($PrincipalId);
+
+    if ($princ->PrincipalType eq 'User') {
+	my $group = RT::Group->new($RT::SystemUser);
+        $group->LoadACLEquivalenceGroup($princ);
+        $PrincipalId = $group->PrincipalId;
+    }
+
+
+    my $ACLObj = new RT::ACL($session{'CurrentUser'});
+    $ACLObj->LimitToObject( $Object );
+    $ACLObj->LimitToPrincipal( Id => $PrincipalId);
+</%INIT>
+    
+<%ARGS>
+$PrincipalType => undef
+$PrincipalId => undef
+$Object =>undef
+</%ARGS>

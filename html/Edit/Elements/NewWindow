@@ -1,0 +1,18 @@
+%# You cannot kill time without injuring eternity.
+<%INIT>
+
+my ($url, $width, $height, $target) = @_;
+$url .= (($url =~ /\?/) ? '&' : '?') . "SessionCookie=$session{_session_id}";
+my $foo = '';
+$foo = "window.name='$target';" if $target;
+
+if ($RT::IsMSIE) {
+    $height += 30;
+    $m->print( "javascript:${foo}window.showModalDialog('$url',window,'dialogWidth=${width}px;dialogHeight=${height}px;center=yes;help=no;status=no;scrollbars=no');");
+}
+else {
+    $m->print("javascript:${foo}MM_openBrWindow('$url',$width,$height)");
+}
+
+return;
+</%INIT>

@@ -1,0 +1,43 @@
+<table width="100%" border="0" cellspacing="0" cellpadding="0" height="26" >
+  <tr bgcolor="#207AAA"> 
+    <td class="poptable" bgcolor="#207AAA">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr> 
+          <td width="87%"><img src="/img/104.png"  align="absmiddle"><font color="#FFFFFF"> 
+            <font size="2">Management System</font></font></td>
+          <td width="13%"> 
+	    <div align="right"><a href="/index/index.html" style="color: white; font-size: 7pt" target="_top"><img src="/img/home.png" width="15" height="15" align="absmiddle" border="0"><&|/l&>Homepage</&></a>&nbsp;</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr> 
+    <td class="poptable" bgcolor="#8AC9EA"> 
+      <table width="95%" border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td><applet code=apPopupMenu archive="apPopupMenu.jar" codebase="/function" width=100% height=23 >
+              <param name="key" value="bm2317e0Of0">
+              <param name="Copyright" value="Apycom Software - www.apycom.com">
+              <param name="delimiter" value=",">
+              <param name="popupOver" value="false">
+              <param name="pressedItem" value="-1">
+              <param name="isHorizontal" value="true">
+              <param name="3DBorder" value="false">
+              <param name="solidArrows" value="false">
+              <param name="showArrows" value="false">
+              <param name="buttonType" value="3">
+              <param name="status" value="link">
+              <param name="alignText" value="left">
+              <param name="backColor" value="8AC9EA">
+              <param name="buttonType" value="3">
+              <param name="backHighColor" value="207AAA">
+              <param name="fontColor" value="134868">
+              <param name="fontHighColor" value="ffffff">
+              <param name="font" value="細明體,12,0">
+              <param name="menuItemsFile" value="Menu.txt">
+            </applet></td>
+        </tr>
+      </table>
+    </td>
+  </tr>

@@ -1,0 +1,144 @@
+%# Hoare's Law of Large Problems:
+%#	Inside every large problem is a small problem struggling to get out.
+
+<& /Edit/Elements/104Header,
+    Buttons => [
+	Add => "index.html?Queue=$Queue&Action-Add=1",
+	Save => ($Scrip ? "javascript:document.getElementById('mainform').submit()" : ''),
+	Delete => 1,
+	Copy => '',
+	Search => '',
+    ],
+    Method => 'POST',
+&>
+
+<input type="hidden" name="Scrip" value="<% $Scrip %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+
+% if ($Queue) { $m->print($m->content) } else {
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Global' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4">
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+                          <tr> 
+			    <td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '../Scrip/' &></td>
+                          </tr>
+% }
+                          <tr> 
+                            <td class="poptable" bgcolor="#C4E1F0"> 
+                              <table width="100%" border="0" cellspacing="4" cellpadding="0">
+                                <tr> 
+                                  <td height="450" valign="top"> 
+                                    <table width="100%" border="0" cellspacing="3" cellpadding="0">
+                                      <tr> 
+                                        <td class="tableEmboss" align=center height=255 valign=top> 
+					  <& Top, Item => $Item, List => $List, Queue => $Queue &>
+                                        </td>
+                                      </tr>
+				      <& List, Delete => 1, List => $List, Begin => $Begin, Item => $Item, ARGS => \%ARGS &>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $List = [];
+my $Item = $RT::Nothing;
+
+my $Scrips = RT::Scrips->new($session{'CurrentUser'});
+my $QueueObj = RT::Queue->new($session{'CurrentUser'});
+my @actions;
+
+if ($Queue)  {
+        $QueueObj->Load($Queue);                        
+}
+
+if ($QueueObj->id) {
+	$Scrips->LimitToQueue($Queue);
+}                                            
+else {                                       
+        $Scrips->LimitToGlobal();
+}                                           
+
+if ($Scrip) {
+    $Item = RT::Scrip->new($session{'CurrentUser'});
+    $Item->Load( $Scrip );
+}
+
+if ($Action eq 'Save' and $Item) {
+    $ARGS{ScripCondition} = $ARGS{UserScripCondition} if $ARGS{UserScripCondition};
+    $ARGS{ScripAction} = $ARGS{UserScripAction} if $ARGS{UserScripAction};
+    foreach my $key (qw(
+	ScripAction ScripCondition Template Description
+	CustomPrepareCode CustomCommitCode CustomIsApplicableCode
+    )) {
+	my $method = "Set$key";
+	$Item->$method($ARGS{$key}) if exists $ARGS{$key};
+    }
+}
+elsif ($Action eq 'Add') {
+    $Item = RT::Scrip->new($session{'CurrentUser'});
+    my ($val, $msg) = $Item->Create(
+	Queue => $Queue,
+	Description => loc('(new)'),
+	ScripAction => 'Autoreply To Requestors',
+	ScripCondition => 'On Create',
+	Template => 'Blank',
+	CustomPrepareCode => '',
+	CustomCommitCode => '',
+	CustomIsApplicableCode => '',
+    );
+    Abort($msg) unless ($val);
+    $Scrip = $Item->id;
+    $Begin = -1;
+}
+elsif ($Action eq 'Delete') {
+    foreach my $Id (@ListDelete) {
+	my $item = RT::Scrip->new($session{'CurrentUser'});
+	$item->Load( $Id );
+	$item->Delete;
+    }
+    $Scrips->RedoSearch;
+    $Item = $Scrips->First || $RT::Nothing;
+    $Begin = $Scrip = 0;
+}
+
+$List = $Scrips->ItemsArrayRef;
+$Begin = int($#$List / 8) * 8 if $Begin == -1;
+
+</%INIT>
+<%ARGS>
+$Begin => 0
+$Scrip => undef
+$Queue => 0
+$Action => ''
+@ListDelete => ()
+</%ARGS>

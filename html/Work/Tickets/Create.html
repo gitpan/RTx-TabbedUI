@@ -1,0 +1,288 @@
+%# What does it mean if there is no fortune for you?
+
+% unless ($NoUI) {
+<& /Work/Elements/104Header, Title => 'New Request', Method => 'POST', Enctype => 'multipart/form-data' &>
+% }
+<INPUT TYPE=HIDDEN Name="id" VALUE="new">
+<INPUT TYPE=HIDDEN NAME=Status Value="new">
+<INPUT Name="Requestors" Type="HIDDEN" Value="<% ($ARGS{Requestors}) || $session{CurrentUser}->Id %>">
+<INPUT TYPE=HIDDEN NAME="Queue" Value="<%$QueueObj->Id%>">
+% if ($RT::OIN104 or $ARGS{Subject}) {
+<INPUT TYPE=HIDDEN Name="Subject" SIZE=60 MAXSIZE=100 value="<%$ARGS{Subject} || 'Workflow'%>">
+% }
+% if ($NoUI) {
+<table cellpadding=0 cellspacing=0 border=0>
+% } else {
+<& /Work/Tickets/Elements/ShowQueue, QueueObj => $QueueObj &>
+%# Basic Info {{{
+<tr><td><table width="100%" cellpadding=0 cellspacing=0 border=0>
+<tr> 
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Queue Name</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+    <% $QueueObj->Name %></td>
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Activated Date</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+% my $Now = RT::Date->new($session{'CurrentUser'}); $Now->SetToNow;
+                        <% $Now->AsDate %></td>
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Queue Owner</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle">
+  </td><td>
+    <& /Work/Elements/SelectOwner, Name => "Owner", QueueObj => $QueueObj, Default => $Owner &>
+  </td>
+</tr>
+<tr> 
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Ticket Type</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle">
+  </td><td>
+    <% $QueueObj->Description %></td>
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Current Status</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+    <&|/l&>New</&></td>
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Owner's Phone</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+	<% $OwnerObj ? $OwnerObj->WorkPhone : '' %>
+			</td>
+</tr>
+</table></td></tr>
+</table></td></tr>
+%# }}}
+
+              <tr> 
+                <td bgcolor="#000000" height="1" colspan="2"></td>
+              </tr>
+% }
+              <tr> 
+                <td colspan="2" valign="top"> 
+                  <table border="0" cellspacing="2" cellpadding="0" width=100%>
+%# Custom Fields {{{
+% my @entry_fields;
+% my $UserObj = $session{CurrentUser}->UserObj;
+% while( my $cf = $CFs->Next() ) {
+%   next if ($NoCF->{$cf->Name});
+%   if ($cf->IsEntry) {
+%     push @entry_fields, $cf;
+%     next;
+%   }
+%   elsif (@entry_fields) {
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Details</&>
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+<& /Work/Tickets/Elements/EditCustomFieldEntries, Prefix => 'AddEntry-', CustomFields => \@entry_fields, TempValues => $Entries, Loc => $Loc &>
+</td></tr>
+%     @entry_fields = ();
+%   }
+
+%   my $attr = $cf->Attribute('OnCreate');
+%   if ($cf->Type =~ /^Label(.+)$/ and $1 ne 'URL') {
+%     $m->comp("/Work/Tickets/Elements/Add$1", CustomField => $cf, Description => $cf->Description, %ARGS) unless $NoCF->{$1}++ or $attr eq 'hidden';
+%     next;
+%   }
+%   next if $attr eq 'hidden';
+
+<tr valign="top"><td><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+%   if ($cf->Type eq 'FreeformExternal') {
+%       my $descr = $UserObj->describe($cf->Description);
+    <% $descr || $cf->Name %>
+%   } elsif ($cf->Type eq 'SelectExternal') {
+%       my $descr = $UserObj->field_cname($cf->Description);
+    <% $descr || $cf->Name %>
+%   } elsif ($cf->Type eq 'LabelURL') {
+%   my $url = $cf->Name;
+%   $url =~ s/\$(\w+)/$UserObj->val($1)/eg;
+%   # XXX - see if IE likes interpolated javascript in urls
+    </p></td><td>&nbsp;</td><td><a <% $url =~ /^\w+:/ ? 'href=' : 'name=' %>"<% $url %>">
+%   $m->print($cf->Description);
+</a></td></tr>
+%     next;
+%   } else {
+    <% loc($cf->Description || $cf->Name) %>
+%   }
+
+%   my $cf_key = ("CustomField-" . $cf->Id . "-Values");
+</p></td><td><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+    <& /Work/Tickets/Elements/EditCustomField,
+	Name	    => 'CustomField-'.$cf->Id,
+	CustomField => $cf,
+	NamePrefix  => "CustomField-",
+	Value	    => (exists($ARGS{$cf_key}) ? $ARGS{$cf_key} : $cf->Attribute('Default')),
+	Queue	    => $QueueObj->Id,
+	Loc	    => $Loc,
+	ReadOnly    => ($cf->Attribute('OnCreate') eq 'readonly') &>
+</td></tr>
+% }
+%# }}}
+% if (@entry_fields) {
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Details</&>
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+<& /Work/Tickets/Elements/EditCustomFieldEntries, Prefix => 'AddEntry-', CustomFields => \@entry_fields, TempValues => $Entries, Loc => $Loc &>
+</td></tr>
+%     @entry_fields = ();
+%   }
+
+% unless ($RT::SystemQueues{$QueueObj->Id} or $NoCF->{Attachments}) {
+<& /Work/Tickets/Elements/AddAttachments, %ARGS &>
+% }
+% unless ($RT::OIN104 or length($ARGS{Subject}) or $NoCF->{Subject}) {
+<& /Work/Tickets/Elements/AddSubject, %ARGS &>
+% }
+% unless ($NoCF->{Notes} or $NoCF->{Content}) {
+<& /Work/Tickets/Elements/AddContent, %ARGS &>
+% }
+
+                  </table>
+                </td>
+              </tr>
+% if ($NoUI) {
+            <tr><td align="center">
+              <input name="Action-Create" type="submit" value="<&|/l&>Confirm Submit</&>" onclick="this.disabled = true; this.form.submit();">
+              <br>
+            </td></tr>
+	    </table>
+%    return;
+% }
+
+              <tr> 
+                <td bgcolor="#333333" height="1" colspan="2"></td>
+              </tr>
+            </table>
+            <div align="center"><br>
+	      <& /Work/Elements/BackButton &>
+              <input type="submit" value="<&|/l&>Confirm Submit</&> &gt;&gt;" onclick="this.disabled = true; this.form.submit();">
+              <br>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $QueueObj = new RT::Queue($session{'CurrentUser'});
+$QueueObj->Load($Queue) || Abort(loc("Queue could not be loaded."));
+my $CFs = $QueueObj->CustomFields();
+
+if ($QueueObj->DefaultDueIn) {
+    my $default_due = RT::Date->new($session{'CurrentUser'});
+    $default_due->SetToNow();
+    $default_due->AddDays($QueueObj->DefaultDueIn);
+    $ARGS{'Due'} = $default_due->ISO();
+}
+
+# {{{ deal with deleting uploaded attachments
+foreach my $key (keys %ARGS) {
+    if ($key =~ m/^DeleteAttach-(.+)$/) {
+	delete $session{'Attachments'}{$1};
+    }
+    $session{'Attachments'} = { %{$session{'Attachments'} || {}} };
+}
+
+# {{{ store the uploaded attachment in session
+if ($ARGS{'Attach'}) {			# attachment?
+    $session{'Attachments'} = {} unless defined $session{'Attachments'};
+
+    my $subject = "$ARGS{'Attach'}";
+    # strip leading directories
+    $subject =~ s#^.*[\\/]##;
+
+    my $attachment = MakeMIMEEntity(
+        Subject             => $subject,
+        Body                => "",
+        AttachmentFieldName => 'Attach'
+    );
+
+    $session{'Attachments'} = { %{$session{'Attachments'} || {}},
+				$ARGS{'Attach'} => $attachment };
+}
+# }}}
+
+foreach my $key (keys %ARGS) {
+    $key =~ /^AddMoreEntry-(.*)$/ or next;
+    $ARGS{'AddMoreEntry'} = [ split(/-/, $1) ];
+}
+
+$session{'Entries'} = {} unless $ARGS{'AddMoreEntry'} or $ARGS{'id'};
+my $Entries = $session{'Entries'} || {};
+
+$m->comp('Elements/ProcessEntryUpdates', Entries => $Entries, %ARGS);
+
+# delete temporary storage entry to make WebUI clean
+unless (keys %{$session{'Attachments'}} and $ARGS{'id'} eq 'new') {
+    delete $session{'Attachments'};
+}
+
+if (keys %{$Entries} and $ARGS{'id'} eq 'new') {
+    $ARGS{"CustomField-$_"} = $Entries->{$_} foreach keys %{$Entries};
+    $session{'Entries'} = { %{$Entries} };
+}
+else {
+    delete $session{'Entries'};
+}
+
+# }}}
+
+# {{{ deal with multi-select CC & AdminCC
+foreach my $key (keys %ARGS) {
+    if      ($key =~ m/^AddAdminCc/) {
+        my @AdminCCs =
+            ref($ARGS{$key}) eq 'ARRAY' ? @{$ARGS{$key}} : ($ARGS{$key});
+        $ARGS{AdminCc} =
+            join ",", $ARGS{AdminCc}, grep { $_ ne "-" } @AdminCCs;
+    } elsif ($key =~ m/^AddCc/) {
+        my @CCs = ref($ARGS{$key}) eq 'ARRAY' ? @{$ARGS{$key}} : ($ARGS{$key});
+        $ARGS{Cc} =
+            join ",", $ARGS{Cc}, grep { $_ ne "-" } @CCs;
+    }
+}
+# }}}
+
+my $valid_cfs = $m->comp('Elements/ValidateCustomFields', CustomFields => $CFs, ARGSRef => \%ARGS);
+
+if ((!exists $ARGS{'AddMoreAttach'}) && (!exists $ARGS{'AddMoreEntry'}) && ($ARGS{'id'} eq 'new') and $valid_cfs) {
+    $m->comp('Display.html', %ARGS);
+    return;
+}
+
+my $users = new RT::Users($session{'CurrentUser'});
+$users->LimitToPrivileged();
+my @PrivUsers;
+while (my $user = $users->Next) {
+    push @PrivUsers, $user->Name;
+}
+
+my $Owner = $ARGS{Owner};
+my $OwnerObj;
+if (!$Owner and $OwnerObj = $QueueObj->AdminCc->UserMembersObj->First) {
+    $Owner ||= $OwnerObj->Id;
+};
+
+$ARGS{Subject} = '' unless exists $ARGS{Subject};
+
+</%INIT>
+
+<%ARGS>
+$DependsOn => undef
+$DependedOnBy => undef
+$MemberOf => undef
+$QuoteTransaction => undef
+$Queue => undef
+$NoUI => undef
+$Loc => undef
+$NoCF => {}
+</%ARGS>

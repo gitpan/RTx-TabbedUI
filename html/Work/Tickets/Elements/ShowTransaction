@@ -1,0 +1,170 @@
+%# First Law of Socio-Genetics:
+%# 	Celibacy is not hereditary.
+
+<tr> 
+    <td rowspan=2 bgcolor="<%$bgcolor%>" width=5>
+% if ($IsLast) {
+<a name="lasttrans"></a>
+% }
+<A NAME="#<%$Transaction->Id%>"></A>&nbsp;
+    </td>
+    <td class="tableTitle" height="44" width="7%"><&|/l&>Users</&></td>
+    <td bgcolor="#FFFFFF" height="44" class="poptable" align="center">
+% my $CreatorName = $Transaction->CreatorObj->Name;
+% $CreatorName = loc('RT_System') if $CreatorName eq 'RT_System';
+	<% $CreatorName %>
+    </td>
+    <td class="tableTitle" height="44" width="8%"><&|/l&>Dates</&></td>
+    <td bgcolor="#FFFFFF" height="44" class="poptable">
+<% $transdate|n %>
+    </td>
+    <td class="tableTitle" height="44" width="8%"><&|/l&>Action</&></td>
+    <td bgcolor="#FFFFFF" height="44" class="poptable" <% $titlebar_commands ? '' : 'colspan=2' %>>
+<%$TicketString%> <%$Transaction->BriefDescription%>
+    </td>
+% if ($titlebar_commands) {
+    <TD class="tableTitle" valign="middle" ALIGN="RIGHT" width="40"><font size=-1><%$titlebar_commands|n%></font></TD>
+% }
+</tr>
+
+% unless ($Collapsed or (!grep length, @Comments and !@Attachments)) {
+<tr>
+    <td class="tableTitle" height="44" width="9%"><&|/l&>Comment</&></td>
+    <td colspan=<% @Attachments ? 3 : 6 %> bgcolor="#FFFFFF" height="44" class="poptable">
+% $m->print(join('<br>', @Comments));
+    </td>
+% if (@Attachments) {
+    <td class="tableTitle" height="44" width="9%"><&|/l&>Attachments</&></td>
+    <td bgcolor="#FFFFFF" height="44" class="poptable" colspan="2">
+      <table border=0>
+%     foreach my $ref (@Attachments) {
+%         my $link = $ref->{Link};
+%         $link .= 'untitled.txt' if $link =~ m{/$};
+        <tr><td>
+<A TARGET="_blank" HREF="<% $link %>?SessionCookie=<% $session{_session_id} %>"><% $ref->{Name} || loc('(untitled)') %></a>
+	</td><td width=10>&nbsp;</td><td align="right">
+<% $ref->{Size} %>
+        </td></tr>
+%     }
+      </table>
+    </td>
+% }
+</tr>
+% }
+
+% if (!$IsLast) {
+<tr><td bgcolor="#333333" height="1" colspan="8" style="padding: 1"></td></tr>
+% }
+
+<%ARGS>
+$Ticket => undef
+$Transaction => undef
+$ShowHeaders => 0
+$Collapsed => undef
+$ShowTitleBarCommands => 1
+$IsLast => 0
+</%ARGS>
+
+<%INIT>
+
+
+my ($TimeTaken, $TicketString, $bgcolor);
+
+my $transdate = $Transaction->CreatedObj->ISO();
+$transdate =~ s/\s/&nbsp;/g;
+
+if ($Transaction->Type =~ /^(Create|Correspond|Comment$)/) {
+	if ($Transaction->IsInbound) {
+		$bgcolor="#336699";
+	}
+	else {
+		$bgcolor="#339999";
+	}
+} elsif (($Transaction->Field =~ /^Owner$/) or 
+	 ($Transaction->Type =~ /^(AddWatcher|DelWatcher)$/)) {
+	$bgcolor="#333399";
+
+} elsif ($Transaction->Type =~ /^(AddLink|DeleteLink)$/) {
+	$bgcolor="#336633";
+} elsif ($Transaction->Type =~ /^(Status|Set|Told)$/) {
+	if ($Transaction->Field =~ /^(Told|Starts|Started|Due)$/) {
+		$bgcolor="#663366";	
+	}
+	else {
+		$bgcolor="#993333";
+	}
+}
+else {
+	$bgcolor="#cccccc";
+}
+
+if ($Ticket->Id != $Transaction->Ticket) {
+	$TicketString = "Ticket ".$Transaction->Ticket .": ";
+}
+
+if ($Transaction->TimeTaken > 0) {
+	$TimeTaken = $Transaction->TimeTaken." min"
+}
+my $attachments = $Transaction->Attachments;
+
+my $titlebar_commands;
+
+# If the transaction has anything attached to it at all
+if ($Transaction->Attachments->First && $ShowTitleBarCommands) {
+	if ($ShowTitleBarCommands ne 'CommentOnly' and $Transaction->TicketObj->CurrentUserHasRight('ReplyToTicket')) {
+		$titlebar_commands .= '<input class="answer" type="submit" border="0" name="Action-Respond-' . $Transaction->Id . '" value="' . loc('Reply') . '">';
+	}
+	if ($ShowTitleBarCommands ne 'RespondOnly' and $Transaction->TicketObj->CurrentUserHasRight('CommentOnTicket')) {
+		$titlebar_commands .= '<input class="answer" type="submit" border="0" name="Action-Comment-' . $Transaction->Id . '" value="' . loc('Comment') . '">';
+	}
+}
+
+my (@Comments, @Attachments);
+
+$attachments->GotoFirstItem;
+while (my $message = $attachments->Next) {
+    #we don't want to show any empty transactions, unless they have kids
+    my $size = $message->ContentLength;
+    next unless $size or $message->Children->Count;
+
+    my ($headers, $quoted);
+    if ($message->Parent == 0) {
+	if ($ShowHeaders && ($ShowHeaders == $Ticket->Id)) {
+	    $headers = $message->Headers;
+	} else {
+	    $headers = $message->NiceHeaders;
+	}
+	chomp $headers;
+	if ($headers) {
+	    # localize the common headers (like 'Subject:'), too.
+	    # we eval here to catch errors when 5.6 panics
+	    eval {$headers =~ s/^([^:]+)(?=:)/loc($1)/em; }
+	}
+    }
+
+    if ($message->ContentType =~ m{^(text/plain|message|text$)}i and !length($message->Filename)) {
+	require Text::Quoted;
+	$quoted = Text::Quoted::extract( $message->Content );
+	push @Comments, $m->scomp('/Ticket/Elements/ShowMessageStanza', Depth => 0, Message => $quoted);
+	next;
+    }
+
+    next unless $size;
+
+    if ($size > 1024) {
+	$size = loc("[_1]k", int($size/102.4)/10);
+    }
+    else {
+	$size = loc("[_1]b", $size);
+    }
+
+    push @Attachments, {
+	Link => "/Work/Tickets/Attachment/" .
+		$Transaction->Id . '/' .
+		$message->Id . '/' .
+		$message->Filename,
+	Name => $message->Filename,
+	Size => $size,
+    };
+}
+</%INIT>

@@ -1,0 +1,39 @@
+<SELECT NAME="<%$Name%>" style="width:150" <% $ReadOnly && 'DISABLED'%>>
+% if ($RT::ChangeOwnerUI or !$Default) {
+<OPTION <% ($RT::Nobody->Id() == $Default) && "SELECTED" %> VALUE="<% $RT::Nobody->Id %>">(<&|/l&>Please Select</&>)</OPTION>
+% }
+%while ( my $User = $Users->Next())  {
+%    next unless $RT::ChangeOwnerUI or !$Default or $User->Id == $Default;
+<OPTION VALUE="<%$User->Id()%>" <% ($User->Id() == $Default) && "SELECTED" %>><%$User->Name()%></OPTION>
+%}
+</SELECT>
+
+<%INIT>
+my $Users = RT::Users->new($session{CurrentUser});
+my $object;
+
+
+if ($TicketObj) {
+        $object = $TicketObj;
+}
+elsif ($QueueObj) {
+        $object = $QueueObj;
+}
+if ($object) {
+        $Users->WhoHaveRight(Right => 'OwnTicket',
+                     Object => $object,
+                     IncludeSystemRights => 1,
+                     IncludeSuperusers => 1);
+} else {
+        $Users->LimitToPrivileged;
+}
+</%INIT>
+
+<%ARGS>
+$QueueObj => undef
+$Name => undef
+$Default => undef
+$User => undef
+$TicketObj => undef
+$ReadOnly => undef
+</%ARGS>

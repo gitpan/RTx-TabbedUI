@@ -1,0 +1,17 @@
+<select name="Type" style="width:100%" <% ($Item == $RT::Nothing) ? 'disabled' : '' %>>
+% if (!$Default) {
+    <option value=""><&|/l&>Please Select</&></option>
+% }
+% for my $option (reverse sort $cf->Types) {
+<OPTION VALUE="<%$option%>" <%($option eq $Default) && "SELECTED"%>><% loc($option) %></OPTION>
+% }
+</SELECT>
+<%INIT>
+my $cf = RT::CustomField->new($session{'CurrentUser'});
+my $Default = $Item->Type;
+
+</%INIT>
+<%ARGS>
+$Item => $RT::Nothing
+$Name => 'Type'
+</%ARGS>

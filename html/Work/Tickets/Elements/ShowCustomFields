@@ -1,0 +1,75 @@
+%# Good news is just life's way of keeping you off balance.
+
+<tr> 
+    <td colspan="2" valign="top">
+	<table border="0" cellspacing="0" cellpadding="0" width=100%>
+
+% my @entry_fields;
+% while( my $cf = $CustomFields->Next() ) {
+%   if ($cf->IsEntry) {
+%     push @entry_fields, $cf;
+%     next;
+%   }
+%   elsif (@entry_fields) {
+<&|/Work/Elements/Row, Title => loc('Details')&>
+<& /Work/Tickets/Elements/EditCustomFieldEntries, Prefix => 'AddEntry-', CustomFields => \@entry_fields, TempValues => $Entries, ReadOnly => 1, TicketObj => $Ticket &>
+</&>
+%    @entry_fields = ();
+%   }
+
+%   if ($cf->Type =~ /^Label(.+)$/ and $1 ne 'URL') {
+%     $m->comp("/Work/Tickets/Elements/Show$1", %ARGS) unless $1 eq 'Content' or $NoCF->{$1}++;
+%     next;
+%   }
+
+
+<tr valign="top"><td width=80><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle">
+%   if ($cf->Type eq 'FreeformExternal') {
+%       my $descr = $session{CurrentUser}->UserObj->describe($cf->Description);
+    <% $descr || $cf->Name %>
+%   } elsif ($cf->Type eq 'SelectExternal') {
+%       my $descr = $session{CurrentUser}->UserObj->field_cname($cf->Description);
+    <% $descr || $cf->Name %>
+%   } elsif ($cf->Type eq 'LabelURL') {
+%   my $UserObj = $Ticket->FirstRequestor;
+%   my $url = $cf->Name;
+%   $url =~ s/\$(\w+)/$UserObj->val($1)/eg;
+%   # XXX - see if IE likes interpolated javascript in urls
+    </nobr></td><td>&nbsp;</td><td><a <% $url =~ /^\w+:/ ? 'href=' : 'name=' %>"<% $url %>">
+%   $m->print($cf->Description);
+</a></td></tr>
+%     next;
+%   } elsif ($Loc) {
+    <% loc($cf->Description || $cf->Name) %>
+%   } else {
+    <% $cf->Description || $cf->Name %>
+%   }
+&nbsp;</nobr></td><td width="8"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td><& /Work/Tickets/Elements/ShowCustomField, Name => 'CustomField-'.$cf->Id, CustomField => $cf, TicketObj => $Ticket, Loc => $Loc &></td></tr>
+% }
+
+% if (@entry_fields) {
+
+<&|/Work/Elements/Row, Title => loc('Details')&>
+<& /Work/Tickets/Elements/EditCustomFieldEntries, Prefix => 'AddEntry-', CustomFields => \@entry_fields, TempValues => $Entries, ReadOnly => 1, TicketObj => $Ticket &>
+</&>
+%    @entry_fields = ();
+% }
+
+% unless ($NoCF->{Attachments}) {
+<& ShowAttachments, Ticket => $Ticket &>
+% }
+
+</table>
+</td></tr>
+
+<%INIT>
+my $CustomFields = $Ticket->QueueObj->CustomFields;
+return unless $CustomFields->Count;
+
+my $Entries = {};
+</%INIT>
+<%ARGS>
+$Ticket => undef
+$Loc	=> 0
+$NoCF   => { Attachments => 1 }
+</%ARGS>

@@ -1,0 +1,178 @@
+%# "I'm really enjoying not talking to you ... Let's not talk again _REAL_ soon...
+
+<& /Edit/Elements/PopHeader, Action => 'Owner.html' &>
+
+<input type="hidden" name="Parent" value="<% $Parent %>">
+<input type="hidden" name="Entry" value="<% $Entry %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+<table width="100%" border="0" cellspacing="5" cellpadding="0" align="center" class="poptable">
+  <tr> 
+    <td valign="top" width="50%"><FIELDSET > <LEGEND><&|/l&>Approver Setting</&></LEGEND> 
+      <table width="100%" border="0" cellspacing="4" cellpadding="0">
+        <tr> 
+          <td>
+            <table border="0" cellspacing="0" cellpadding="0" align="center">
+              <tr> 
+                <td> 
+                  <input type="radio" name="SetOwnerClass" value="owner"
+		    <% ($OwnerClass eq 'owner') ? 'CHECKED' : '' %>>
+                  <&|/l&>Owner</&></td>
+              </tr>
+              <tr> 
+                <td colspan="2" height="8"></td>
+              </tr>
+              <tr> 
+                <td> 
+                  <input type="radio" name="SetOwnerClass" value="admin"
+		    <% ($OwnerClass eq 'admin') ? 'CHECKED' : '' %>>
+                  <&|/l&>Requestor's</&> 
+                  <select name="FieldSetadmin">
+                    <option value="1" <% ($F{admin} != 1) ? '' : 'SELECTED' %>><&|/l&>First-</&></option>
+                    <option value="2" <% ($F{admin} == 2) ? 'SELECTED' : '' %>><&|/l&>Second-</&></option>
+                    <option value="3" <% ($F{admin} == 3) ? 'SELECTED' : '' %>><&|/l&>Third-</&></option>
+                    <option value="4" <% ($F{admin} == 4) ? 'SELECTED' : '' %>><&|/l&>Fourth-</&></option>
+                  </select>
+                  <&|/l&>level Admins</&></td>
+              </tr>
+              <tr> 
+                <td colspan="2" height="8"></td>
+              </tr>
+              <tr> 
+                <td> 
+                  <input type="radio" name="SetOwnerClass" value="ownrole"
+		    <% ($OwnerClass eq 'ownrole') ? 'CHECKED' : '' %>>
+                  <&|/l&>Requestor Group's</&> 
+                  <select name="FieldSetownrole" style="width:150px">
+% while (my $r = $Roles->Next) {
+%	    my $selected = 'SELECTED' if $F{role} eq -$r->Id;
+                <option <% $selected %> value="<% -$r->Id %>"><% $r->Name %></option>
+% }
+% foreach my $j (@$Jobs) {
+%	    my $selected = 'SELECTED' if $F{ownrole} eq $J{$j}->{job_id};
+                <option <% $selected %> value="<% $J{$j}->{job_id} %>"><% $j %></option>
+% }
+                  </select>
+                  <&|/l&>Roles</&></td>
+              </tr>
+              <tr> 
+                <td colspan="2" height="8"></td>
+              </tr>
+              <tr> 
+                <td> 
+                  <input type="radio" name="SetOwnerClass" value="grouprole"
+		    <% ($OwnerClass eq 'grouprole') ? 'CHECKED' : '' %>>
+                  <select name="FieldSetgroup" style="width:150px">
+% while (my $g = $List->Next) {
+%	    my $selected = 'SELECTED' if $F{group} eq $g->Id;
+                <option <% $selected %> value="<% $g->Id %>"><% $g->Name %></option>
+% }
+                  </select>
+                  <&|/l&>Group's</&> 
+                  <select name="FieldSetrole" style="width:150px">
+% while (my $r = $Roles->Next) {
+%	    my $selected = 'SELECTED' if $F{role} eq -$r->Id;
+                <option <% $selected %> value="<% -$r->Id %>"><% $r->Name %></option>
+% }
+% foreach my $j (@$Jobs) {
+%	    my $selected = 'SELECTED' if $F{role} eq $J{$j}->{job_id};
+                <option <% $selected %> value="<% $J{$j}->{job_id} %>"><% $j %></option>
+% }
+                  </select>
+                  <&|/l&>Roles</&></td>
+              </tr>
+              <tr> 
+                <td colspan="2" height="8"></td>
+              </tr>
+              <tr> 
+                <td> 
+                  <input type="radio" name="SetOwnerClass" value="customfield"
+		    <% ($OwnerClass eq 'customfield') ? 'CHECKED' : '' %>>
+                  <&|/l&>CustomField</&>:
+                  <select name="FieldSetcustomfield" style="width:150px">
+% while( my $cf = $CFs->Next ) {
+%           next unless $cf->Type =~ /(?:Single|External)$/; # multival doesn't make sense
+%	    my $selected = 'SELECTED' if $F{customfield} eq $cf->Id;
+                <option <% $selected %> value="<% $cf->Id %>"><% $cf->Name %></option>
+% }
+              </select>
+		</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      </FIELDSET></td>
+  </tr>
+</table>
+
+<& /Edit/Elements/PopFooter &>
+<%INIT>
+my $Workflows = RT::Templates->new($session{'CurrentUser'});
+my $QueueObj = RT::Queue->new($session{'CurrentUser'});
+$QueueObj->Load($Queue) if $Queue;
+if ($QueueObj->Id) {
+    $Workflows->LimitToQueue($Queue);
+}
+else {
+    $Workflows->LimitToGlobal();
+}
+$Workflows->Limit( FIELD => 'Content', VALUE => '%===Create-Ticket:%', OPERATOR => 'LIKE' );
+
+require RT::Workflow;
+my $List = RT::Workflow->new($session{'CurrentUser'});
+if ( $Workflows->Count ) {
+    $List->Load($Workflows->First->Id);
+}
+else {
+    $List->Create( Queue => $Queue );
+}
+
+my $Item = $List->Entries->{$Entry} || $RT::Nothing;
+
+if ($ARGS{'Action-Commit'}) {
+    foreach my $method (grep /^Set/, keys %ARGS) {
+	$Item->{substr($method, 3)} = $ARGS{$method};
+    }
+
+    my %Field;
+    foreach my $method (grep /^FieldSet/, keys %ARGS) {
+	$Field{substr($method, 8)} = $ARGS{$method};
+    }
+    $Item->SetOwnerFields(join(',', map { s/,/./g; $_ } %Field)) if %Field;
+    $List->Parse($List->Dump);
+    $List->Save;
+    $m->print('<script>window.close();</script>');
+    $m->abort;
+}
+
+my $OwnerClass = $Item->OwnerClass || 'owner';
+my %F = split(/,/, $Item->OwnerFields);
+
+my $CFs;
+
+if ($QueueObj->Id) {
+    $CFs = $QueueObj->CustomFields;
+}
+else {
+    $CFs = RT::CustomFields->new($session{'CurrentUser'});
+    $CFs->LimitToGlobal();
+}
+
+my $Roles = RT::Groups->new($session{'CurrentUser'});
+$Roles->LimitToRolesForGroup();
+$Roles->OrderBy( FIELD => 'NAME' );
+
+$List = RT::Groups->HRMSUserDefinedGroups( $session{'CurrentUser'} );
+
+my $U = $session{CurrentUser}->UserObj;
+my $J = $U->table($U->normalize($U->table('employee'), 'job'));
+my %J = map {($_->{job_cname}, $_)} values %$J;
+my $Jobs;
+@$Jobs = sort keys %J;
+
+</%INIT>
+<%ARGS>
+$Queue
+$Entry
+$Parent
+</%ARGS>

@@ -1,0 +1,87 @@
+%# Natives who beat drums to drive off evil spirits are objects of
+%# scorn to smart Americans who blow horns to break up traffic jams.
+%# 		-- Mary Ellen Kelly
+<& /Edit/Elements/PopHeader, Title => loc('Query'), Target => $Target, Action => 'index.html' &>
+
+<input type="hidden" name="DoSearch" value="1">
+<table width="100%" border="0" cellspacing="6" cellpadding="0" class="poptable">
+  <tr> 
+    <td><img src="/img/space.png" width="6" height="4" align="absmiddle"> 
+      <input type="radio" name="Limit" value="0" checked>
+<&|/l&>List All Users</&></td>
+  </tr>
+  <tr> 
+    <td><fieldset > <legend> 
+      <input type="radio" name="Limit" value="1"><&|/l&>Enter one or more conditions below to search for users</&>
+      </legend>
+      <table border="0" cellspacing="3" cellpadding="0" align="center">
+        <tr> 
+          <td>&nbsp;</td>
+          <td>&nbsp; </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>User Number</&></td>
+          <td> 
+            <input type="text" name="IdMin"  style="width:140px">
+            <&|/l&>to</&> 
+            <input type="text" name="IdMax"  style="width:140px">
+            <&|/l&>number</&></td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Name</&></td>
+          <td> 
+            <input type="text" name="Name"  style="width:300px" value="">
+          </td>
+        </tr>
+        <tr> 
+          <td>Email</td>
+          <td> 
+            <input type="text" name="Email"  style="width:300px">
+          </td>
+        </tr>
+        <tr> 
+          <td><&|/l&>Group Name</&></td>
+          <td> 
+            <select name="GroupId" style="width:300px">
+		<option></option>
+%foreach my $Group (@$List) {
+% my $name = $Group->Name or next;
+<option value="<% $Group->id %>"><% $name %></option>
+%}
+            </select>
+          </td>
+        </tr>
+        <tr> 
+          <td>&nbsp;</td>
+          <td>&nbsp; </td>
+        </tr>
+        <tr> 
+          <td>&nbsp;</td>
+          <td> 
+            <input type="checkbox" name="FindDisabledUsers" value="1">
+            <&|/l&>Include disabled users in search.</&></td>
+        </tr>
+        <tr> 
+          <td>&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+      </fieldset></td>
+  </tr>
+</table>
+
+<& /Edit/Elements/PopFooter, CloseOnSubmit => 1 &>
+<%INIT>
+my $Groups = RT::Groups->new($session{'CurrentUser'});
+$Groups->LimitToUserDefinedGroups();
+$Groups->OrderBy( FIELD => 'Name', ORDER => 'DESC' );
+my $GroupsRef = $Groups->ItemsArrayRef;
+# Schwartzian transform!
+my $List = [ map { $_->[0] }
+	     sort { $a->[1] cmp $b->[1] }
+	     map { [ $_ => $_->Name ] }
+	     @{ $GroupsRef } ];
+</%INIT>
+<%ARGS>
+$Target	=> 'frmMAIN'
+</%ARGS>

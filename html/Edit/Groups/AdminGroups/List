@@ -1,0 +1,4 @@
+%# Q:  How many heterosexual males does it take to screw in a light bulb
+%#     in San Francisco?
+%# A:  Both of them.
+<& /Edit/Global/GroupRight/List, Style => "", Width => '335', Size => 5, Label => 'AdminGroupPermission', %ARGS &>

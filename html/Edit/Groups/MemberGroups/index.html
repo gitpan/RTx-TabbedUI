@@ -1,0 +1,38 @@
+%# There are no games on this system.
+% if (!@Depth) {
+<div style="height:130px; overflow:auto; background-color: white; border: 2px #ccc inset">
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+<tbody>
+% }
+% foreach my $item (@$List) {
+<tr><td>
+%    foreach my $last (@Depth) {
+    <img src="/img/ftv2<% $last ? 'blank' : 'vertline' %>.png" width="16" height="22" align="absmiddle">
+%    }
+    <img height=22 src="/img/ftv2<% $item == $List->[-1] ? 'last' : '' %>node.png" width=16 board="0" align="absmiddle"> 
+    <img border=0 src="/img/GroupItem.png" width="20" height="20" align="absmiddle">
+    <a href="/Edit/Groups/index.html?Group=<% $item->Id %>"><% $item->Name %></a>
+</td></tr>
+<& index.html, Item => $item, Depth => [ @Depth, ($item == $List->[-1] ) ], Seen => $Seen &>
+% }
+% if (!@Depth) {
+</tbody> 
+</table>
+</div>
+<input <% ($Item == $RT::Nothing or $Item->Description) ? 'disabled' : '' %> type="button" value="<&|/l&>Edit Subgroups</&>" style="float: right; margin-top: 2px" onclick="<& /Edit/Elements/NewWindow, "/Edit/Groups/MemberGroups/Add.html?Group=" . $Item->Id, 600, 365 &>">
+% }
+
+<%INIT>
+return if $Seen->{$Item}++;
+my $Members = $Item->MembersObj || $RT::Nothing;
+$Members->LimitToGroups;
+my $List = $Members->ItemsArrayRef || [];
+@$List = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => 
+    (int($_->Description) ? 1 : 0) . $_->Name
+] } grep { $_->Name } map { $_->MemberObj->Object } @$List );
+</%INIT>
+<%ARGS>
+$Item => undef
+$Seen => {}
+@Depth => ()
+</%ARGS>

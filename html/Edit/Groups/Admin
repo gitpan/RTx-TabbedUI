@@ -1,0 +1,26 @@
+%# "You can't make a program without broken egos."
+<table width="360" border="0" cellspacing="0" cellpadding="0" align="center" height="100%">
+  <tr> 
+    <td><& /Edit/Elements/Tabs, Map => $Map, Show => $Show, Begin => $Begin, Group => $Group &></td>
+  </tr>
+  <tr> 
+    <td class="tableEmboss">
+      <table width="100%" border="0" cellspacing="4" cellpadding="0">
+        <tr valign="top"><td><FIELDSET><LEGEND><&|/l&>Admin</&></LEGEND>
+	    <& AdminUsers/index.html, Object => $Item, %ARGS &>
+	</FIELDSET></td></tr>
+        <tr valign="top"><td><FIELDSET><LEGEND><&|/l&>AdminGroup</&></LEGEND>
+	    <& AdminGroups/index.html, Object => $Item, %ARGS &>
+	</FIELDSET></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%ARGS>
+$Show => 'Admin'
+$Begin => 0
+$Group => 0
+$Map => {}
+$Action => ''
+$Item => $RT::Nothing
+</%ARGS>

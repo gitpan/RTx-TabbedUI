@@ -1,0 +1,117 @@
+%# Man is the only animal that can remain on friendly terms with the
+%# victims he intends to eat until he eats them.
+%#		-- Samuel Butler
+
+</form><form name="infoform" id="infoform" method="get" action="index.html">
+<input type="hidden" name="Queue" value="<% $Item->Id %>">
+<input type="hidden" name="Category" value="<% $Category %>">
+% if (!$Details) {
+    <input type="hidden" name="Show" value="Delegate">
+    <input type="hidden" name="User" value="<% $ARGS{UID} %>">
+    <input type="hidden" name="Begin" value="<% $ARGS{BID} %>">
+    <input type="hidden" name="BeginDelegate" value="<% $ARGS{Begin} %>">
+% }
+<input type="hidden" name="Action-Save" value="1">
+
+<table width="100%" border="0" cellspacing="0" cellpadding="2">
+    <tr> 
+	<td class="tableTitle" ><&|/l&>Delegates Info</&></td>
+    </tr>
+    <tr> 
+	<td class="poptable" height="<% $Details ? 380 : 50 %>" valign="top"> 
+%#	    <& /Work/Elements/Button, Name => 'Action-Save', Image => 'funcSave', Text => 'Save', Disabled => $disabled &>
+	<table border="0" cellspacing="3" cellpadding="1" align="center" width="90%">
+	    <col width="20%"><col width="60%"><col width="20%">
+% if ($Details) {
+	    <tr> 
+	    <td colspan="3" height="18">&nbsp;</td>
+	    </tr>
+% }
+	    <tr>
+	    <td><&|/l&>Delegates</&></td>
+% my $IsWork = ($r->uri =~ /Work/);
+	    <td><input class="<% $IsWork ? 'wro' : 'ero' %>" readonly style="width:100%" <% $disabled %> value="<% $User->Name %>">
+	    </td><td><input type="button" value="<&|/l&>Pick</&>" style="width: 100%" onclick="<& /Edit/Elements/NewWindow, "/Work/Delegates/Add.html?IsWork=" . $IsWork . "&CurrentUser=" . $CurrentUser->Id . "&Queue=" . $Item->Id, 290, 430 &>" <% $Item->Id ? '' : 'disabled' %>>
+<%DOC>
+	      <select name="SetDelegate" style="width:100%" <% $disabled %>>
+		<option value=""><&|/l&>none</&></option>
+% foreach my $UserObj (@$Users) {
+		<option value="<% $UserObj->Id %>" <% ($UserObj->Id == $User->Id) ? 'selected' : '' %>><% $UserObj->get('no') %> <% $UserObj->Name %></option>
+% }
+	      </select>
+</%DOC>
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Delegates Status</&></td>
+	    <td>
+	        <% $disabled ? '('.loc('none').')' : ($Disabled ? loc('Disabled') : loc('Open')) %>
+	    </td><td>
+% if ($Disabled) {
+	      <input name="SetEnabled" type="submit" value="<&|/l&>Open</&>" style="width: 100%" <% $disabled %>>
+% } else {
+	      <input name="SetDisabled" type="submit" value="<&|/l&>Disabled</&>" style="width: 100%" <% $disabled %>>
+% }
+	    </td>
+	    </tr>
+% if ($Details) {
+	    <tr><td colspan=3><hr></td></tr>
+	    <tr> 
+	    <td><&|/l&>User Number</&></td>
+	    <td colspan="2">
+		<input value="<% $User->get('no') %>" class="wro" readonly <% $disabled %> type="text" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td>First Name</td>
+	    <td colspan="2">
+		<input value="<% $User->get('firstname') %>" class="wro" readonly <% $disabled %> type="text" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td>Last Name</td>
+	    <td colspan="2">
+		<input value="<% $User->get('lastname') %>" class="wro" readonly <% $disabled %> type="text" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Department Name</&></td>
+	    <td colspan="2">
+		<input value="<% $User->get('department') %>" class="wro" readonly <% $disabled %> type="text" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Position Name</&></td>
+	    <td colspan="2">
+		<input value="<% $User->get('job') %>" class="wro" readonly <% $disabled %> type="text" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Phone number</&></td>
+	    <td colspan="2">
+		<input value="<% $User->WorkPhone %>" class="wro" readonly <% $disabled %> type="text" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><nobr><&|/l&>Email</&>&nbsp;</nobr></td>
+	    <td colspan="2">
+		<input value="<% $User->EmailAddress %>" class="wro" readonly <% $disabled %> type="text" size="30" style="width:100%">
+	    </td>
+	    </tr>
+% }
+	</table>
+	</td>
+    </tr>
+</table>
+<%INIT>
+my $disabled = 'disabled' unless $Item->Id and $User->Id;
+</%INIT>
+<%ARGS>
+$Item		=> $RT::Nothing
+$Users		=> []
+$User		=> $RT::Nothing
+$Disabled	=> 0
+$Category	=> ''
+$Details	=> 1
+$CurrentUser    => $RT::Nothing
+</%ARGS>

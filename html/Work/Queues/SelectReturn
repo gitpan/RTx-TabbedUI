@@ -1,0 +1,11 @@
+%# To envision how a 4-processor system running [SunOS] 4.1.x works, think
+%# of four kids and one bathroom.
+%# 		-- John DiMarco
+
+<html><body><script><!--
+parent.window.returnValue = '<% $QueueObj->Id %>[;]<% $QueueObj->Name %>';
+window.close();
+--></script></body></html>
+<%ARGS>
+$QueueObj
+</%ARGS>

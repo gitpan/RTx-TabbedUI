@@ -1,0 +1,95 @@
+%# Stop searching.  Happiness is right next to you.  Now, if they'd only
+%# take a bath ...
+<& /Edit/Elements/PopHeader &>
+
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Fixed" value="<% $Fixed %>">
+
+<&|/Edit/Elements/PickUsers, Prefix => 'Member', %ARGS &>
+    <tr><td align="center">
+	<&|/l&>Role Name</&>
+	<select <% $ReadOnly ? 'readonly' : '' %> name="Member" style="width:450">
+% if (!exists $RoleMap->{$Group}{0} or ($Member eq 0)) {
+%     unless ($Fixed and $Member ne 0) {
+	    <option value="0" <% $Member ? '' : 'selected' %>>(<&|/l&>none</&>)</option>
+%     }
+% }
+% while (my $Role = $Roles->Next) {
+%     next if $Fixed and $Role->Id != $Member;
+%     next if %{$RoleMap->{$Group}{$Role->Id}||{}} and $Role->Id != $Member;
+%     my $selected = 'selected' if $Role->Id == $Member;
+	    <option value="<% $Role->Id %>" <% $selected %> <% $Member eq $Role->Id ? 'selected' : '' %>><% $Role->Name %></option>
+% }
+	</select>
+    </td></tr>
+</&>
+
+<& /Edit/Elements/PopFooter &>
+
+<%INIT>
+my $Roles = RT::Groups->new($session{'CurrentUser'});
+$Roles->LimitToRolesForGroup();
+$Roles->OrderBy( FIELD => 'Name' );
+
+my $RoleMap = $Roles->RoleMap;
+my $Object = $RT::Nothing;
+my $List = $session{MemberList};
+my $OffList = $session{MemberOffList};
+
+$Object = RT::Group->new($session{'CurrentUser'});
+$Object->Load($Group) || Abort(loc("Couldn't load group [_1]",$Group));
+
+if (!$Continuation) {
+    $List = [];
+    $OffList = [];
+    
+    @$OffList = grep {
+    	if ($Group and eval { $RoleMap->{$Group}{$Member}{$_} }) {
+          	my $Obj = RT::User->new($session{'CurrentUser'});
+         	$Obj->Load($_);
+            	push @$List, $Obj;
+    	}
+    	else {
+    	    1;
+    	}
+    } @{ $RT::Handle->dbh->selectcol_arrayref( "SELECT Id FROM Users WHERE ExternalAuthId > 0" )};
+
+    $session{"MemberList"} = [@$List];
+    $session{"MemberOffList"} = [@$OffList];
+}
+elsif ($Action eq 'Commit') {
+    my %seen;
+    $Member ||= 0;
+    while (my ($role, $members) = each %{$RoleMap->{$Group}} ) {
+	next if $role == $Member;
+	$seen{$_}++ foreach keys %$members;
+    }
+    foreach my $item (@$OffList) {
+	$Object->DeleteMember( $item ) unless $seen{$item};
+    }
+    foreach my $item (@$List) {
+	$Object->AddMember( $item->PrincipalId );
+    }
+
+    $RoleMap->{$Group}{$Member} = { map { $_->Id => 1 } @$List };
+    $Roles->SetRoleMap($RoleMap);
+    $m->print("<script>opener.location.reload();window.close();</script>");
+    $m->abort;
+}
+
+</%INIT>
+<%ARGS>
+$SubJob => ''
+$Show => ''
+$Queue => 0
+$Group => 0
+$Member => ''
+$Action => ''
+$Begin => 0
+$ReadOnly => 0
+$Continuation => 0
+$Fixed => 0
+</%ARGS>

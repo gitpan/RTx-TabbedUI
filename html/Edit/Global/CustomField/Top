@@ -1,0 +1,90 @@
+%# Anybody who doesn't cut his speed at the sight of a police car is
+%# probably parked.
+
+<table width="100%" border="0" cellspacing="5" cellpadding="0">
+  <tr>
+    <td >
+      <table border="0" cellpadding="0" align="center" cellspacing="0" width="100%" class="fixed"><COL width="55"><COL width="50%"><COL width="20"><COL width="55"><COL width="50%">
+        <tr> 
+          <td><nobr><&|/l&>Field Type</&>&nbsp;</nobr></td>
+          <td>
+	    <& /Edit/Elements/SelectCustomFieldType, Item => $Item &>
+          </td>
+	  <td>&nbsp;</td>
+          <td><nobr><&|/l&>Field Name</&>&nbsp;</nobr></td>
+          <td>
+            <input type="text" value="<% $Item->Name %>" name="Name" style="width:100%" <% $Item->Type ? '' : 'disabled' %>>
+          </td>
+        </tr>
+        <tr> 
+          <td  width="55"><nobr><&|/l&>Field Description</&>&nbsp;</nobr></td>
+          <td>
+% if ($Item->Type eq 'FreeformExternal') {
+	    <select name="Description" style="width:100%">
+%     my $UserObj = $session{CurrentUser}->UserObj;
+%     foreach my $key ($UserObj->meta) {
+%	    next if $key =~ /PICTURE|_1$/;
+%	    my $descr = $UserObj->describe($key); $descr =~ s/ID$//;
+%	    my $selected = 'SELECTED' if $Item->Description eq $key;
+	    <option value="<% $key %>" <% $selected %>><% $descr %></option>
+%     }
+	    </select>
+% } elsif ($Item->Type =~ /(?:Select|Entry)External/) {
+	    <select name="Description" style="width:100%">
+%     my $UserObj = $session{CurrentUser}->UserObj;
+%     my $Table = $UserObj->fields_cname();
+%     foreach my $key (sort { $a <=> $b } keys %$Table) {
+%	    my $selected = 'SELECTED' if $Item->Description eq $key;
+	    <option value="<% $key %>" <% $selected %>><% $Table->{$key} %></option>
+%     }
+	    </select>
+% } else {
+            <input type="text" value="<% $Item->Description %>" name="Description" style="width:100%" <% $Item->Type ? '' : 'disabled' %>>
+% }
+          </td>
+	  <td>&nbsp;</td>
+          <td><nobr><&|/l&>Default Value</&>&nbsp;</nobr></td>
+          <td>
+            <input type="text" value="<% $Item->Attribute('Default') %>" name="Default" style="width:100%" <% $Item->Type ? '' : 'disabled' %>>
+          </td>
+        </tr>
+        <tr> 
+          <td><nobr><&|/l&>Additional Hints</&>&nbsp;</nobr></td>
+          <td>
+            <input type="text" value="<% $Item->Attribute('Hints') %>" name="Hints" style="width:100%" <% $Item->Type ? '' : 'disabled' %>>
+          </td>
+	  <td>&nbsp;</td>
+          <td><nobr><&|/l&>On Create</&>&nbsp;</nobr></td>
+          <td>
+	    <& SelectWritable, Item => $Item, Name => 'OnCreate' &>
+          </td>
+        </tr>
+	<tr>
+          <td><nobr><&|/l&>Match Pattern</&>&nbsp;</nobr></td>
+          <td>
+            <input type="text" value="<% $Item->Attribute('Pattern') %>" name="Pattern" style="width:100%" <% $Item->Type ? '' : 'disabled' %>>
+          </td>
+	  <td>&nbsp;</td>
+          <td><nobr><&|/l&>On Change</&>&nbsp;</nobr></td>
+          <td>
+	    <& SelectWritable, Item => $Item, Name => 'OnUpdate' &>
+          </td>
+	</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<table width="100%" border="0" cellspacing="2" cellpadding="0">
+<tr> 
+    <td>
+	  <& /Edit/Elements/Button, Name => "Action-Up", Image => "funcUp", Text => "Move up", Disabled => $novalue &>
+	  <& /Edit/Elements/Button, Name => "Action-Down", Image => "funcDown", Text => "Move down", Disabled => $novalue &>
+    </td>
+</tr>
+<%INIT>
+my $novalue = ((!@$List or !$Item->Type) ? 'disabled' : '');
+</%INIT>
+<%ARGS>
+$Item => $RT::Nothing
+$List => []
+</%ARGS>

@@ -1,0 +1,20 @@
+%# One way to stop a runaway horse is to bet on him.
+<%INIT>
+*NOTHING::AUTOLOAD = sub {''} unless ($RT::Nothing);
+$RT::Nothing ||= bless(\(my $x), 'NOTHING');
+$RT::IsMSIE = ($ENV{HTTP_USER_AGENT} =~ /MSIE/);
+
+my $Action = (
+    grep defined, map { /^Action-(.+?)(?:\.[xyXY])?[012]?$/ ? $1 : undef }
+    grep length $ARGS{$_}, keys %ARGS
+)[0] || 'Save';
+
+my $ListDelete = [];
+if ($ARGS{ListDelete}) {
+    $ListDelete = $ARGS{ListDelete};
+    $ListDelete = [ $ListDelete ] unless ref($ListDelete);
+}
+
+$m->call_next(%ARGS, Action => $Action, ListDelete => $ListDelete);
+</%INIT>
+<& /Edit/Elements/Footer &>

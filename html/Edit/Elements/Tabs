@@ -1,0 +1,36 @@
+%# "Don't go around saying the world owes you a living.  The world owes
+%# you nothing.  It was here first."
+%# 		-- Mark Twain
+
+<table border=0 cellpadding=0 cellspacing=0 bgcolor="#C4E1F0"><tr height=22> 
+% my $postfix;
+% while (my ($k, $v) = splice(@$Map, 0, 2)) {
+%   $image = "<img border=0 src='$ImagePath$k.png'>" if $ImagePath;
+%   if ($k eq '') { $postfix = $v; next }
+%   if ($k eq $Skip) {
+	<td valign="top"><img alt="|" src="/img/tabLeftOff.png" style="margin-right: 0" height=15 width=7></td>
+	<td valign="top" class="tab"><span class="tab_disabled"><nobr><% $image |n %><% loc($v) %></nobr></span></td>
+	<td background="/img/tabBorder.png" style="background-repeat: no-repeat" valign="top"><img alt="|" src="/img/tabRightOff.png" border=0 style="margin-right: 0" height=15></td>
+%   } elsif ($k eq $Show or File::Spec->canonpath($k) eq File::Spec->canonpath($URL)) {
+	<td bgcolor="#0f6080" valign="top"><img alt="|" src="/img/tabLeftOn.png" width=12 height=15></td>
+	<td valign="top" class="tab_current" height=15><nobr><% $image |n %><% loc($v) %></nobr></td>
+%  } else {
+	<td background="/img/tabBorder.png" style="background-repeat: no-repeat" valign="top"><img alt="|" src="/img/tabLeftOff.png" border=0 style="margin-right: 0" height=15 width=7></td>
+	<td class="tab" valign=top style="cursor:hand" height=15><a style="cursor: hand" href="<% $Show ? (($ARGS{url} || $url) . "?Show=$k") : (($k=~/\?/) ? "$k&" : "$k?") %><% $ARGS{Begin} ? "&Begin=$ARGS{Begin}" : '' %><% $ARGS{User} ? "&User=$ARGS{User}" : '' %><% $ARGS{Group} ? "&Group=$ARGS{Group}" : '' %><% $postfix %>"><span class="tab"><nobr><% $image |n %><% loc($v) %></nobr></span></a></td>
+	<td background="/img/tabBorder.png" style="background-repeat: no-repeat" valign="top"><img alt="|" src="/img/tabRightOff.png" border=0 style="margin-right: 0"></td>
+%  }
+% }
+</tr></table>
+<%INIT>
+my $url = $r->uri;
+$url =~ s{//+}{/}g;
+my $image = '';
+</%INIT>
+<%ARGS>
+$Map	=> []
+$Name	=> 'Map'
+$Show	=> ''
+$URL	=> ''
+$Skip	=> ''
+$ImagePath => ''
+</%ARGS>

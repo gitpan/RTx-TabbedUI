@@ -1,0 +1,6 @@
+____________________________________________________________________________
+[  7972] By: autrijus                              on 2003/09/08  00:57:09
+        Log: * This be 0.00_01, initial CPAN prerelease.
+	   + MANIFEST Makefile.PL README lib/RTx/TabbedUI.pm
+	   + t/0-signature.t t/1-basic.t
+	  +> (branch 204 files)

@@ -1,0 +1,93 @@
+%# Too much of everything is just enough.
+%# 		-- Bob Wier
+
+% if ($Style) {
+<div align="center" style="<% $Style %>">
+% }
+
+<TABLE STYLE="table-layout:fixed; overflow:hidden" class=tableEmboss CELLPADDING='2' CELLSPACING='1' WIDTH="<% $Width %>" BORDER='0'>
+% if ($Delete) {
+    <COL WIDTH="23">
+% }
+% foreach my $Col (@$Data) {
+    <COL WIDTH="<% $Col->[0] || 'auto' %>">
+% }
+    <tr> 
+% if ($Delete) {
+      <td class="tableTitle">&nbsp;</td>
+% }
+% foreach my $Col (@$Data) {
+      <td class="tableTitle"><NOBR><% $Col->[1] %></NOBR></td>
+% }
+    </tr> 
+% foreach my $item (@{$List}[$Begin .. $Begin + $Size - 1]) {
+%     $item = $CBItem->($item) if $CBItem;
+%     undef $item if ref($item) eq 'NOTHING';
+%     my $bg = $BG || (($item and (!ref($item) ? ($item eq $Item) : (UNIVERSAL::can($item, 'Id') ? ($item->Id == $Item->Id) : ( $item->{Id} eq $Item->{Id} )))) ? '#ffffcc' : 'ffffff');
+%     if (ref($bg) eq 'CODE') { $bg = $bg->($item) }
+    <tr height=24 bgcolor='<% $bg %>'
+%     my $onClick = '';
+%     if ($item) {
+	onMouseOver="this.style.backgroundColor='#D1FAFC'" 
+        onMouseOut="this.style.backgroundColor='<% $bg %>'"
+	style="cursor:hand" 
+%	$onClick = q[onClick="MM_goToURL('self','] . $Link->($item) . q[');return document.MM_returnValue"];
+%     } else { $item = $RT::Nothing }
+    >
+% my $count = 0;
+% if ($Delete) {
+    <td>
+%#  XXX: 'disabled' for in-use user-defined objects
+%   if ($onClick and (!ref($Delete) or (my $enabled = $Delete->($item)))) {
+    <input type="checkbox" name="ListDelete" <% $enabled eq 'disabled' ? $enabled : '' %> value="<% eval { $item->Id } || eval { $item->{Id} } || $item %>" <% 0 ? 'checked' : '' %>>
+%   } else {
+      &nbsp;
+%   }
+    </td>
+% }
+% foreach my $Col (@$Data) {
+	<td class="tableBody"
+%     $m->print($Col->[3] . " $onClick");
+	>
+%     if ($Index == $count++ and $item != $RT::Nothing ) {
+	<nobr><a style="color: black" href="<% $Link->($item) %>"><% eval { $Col->[2]->($item) } %></a>&nbsp;</nobr></td>
+%     } else {
+	<nobr><% eval { $Col->[2]->($item) } %>&nbsp;</nobr></td>
+%     }
+% }
+    </tr>
+% }
+</table>
+% if ($Style) {
+    </div>
+% }
+<& Page, Post => $Post, Size => $Size, List => $List, Begin => $Begin, ARGS => $ARGS &>
+<%INIT>
+if (UNIVERSAL::isa($List, 'DBIx::SearchBuilder')) {
+    my $Count = $List->Count;
+    $List->FirstRow($Begin + 1);
+    $List->RowsPerPage($Size);
+    $List->RedoSearch;
+    my $CurList = $List->ItemsArrayRef || [];
+    $List = [ ((undef) x $Begin ), @$CurList, ((undef) x ($Count - @$CurList - $Begin )) ];
+}
+</%INIT>
+<%ARGS>
+$Size	=> 16
+$List	=> []
+$Data	=> ''
+$Link	=> ''
+$Role	=> ''
+$Begin	=> 0
+$IDMap	=> {}
+$URL	=> ''
+$ARGS	=> {}
+$Style	=> ''
+$Item	=> $RT::Nothing
+$Index	=> 0
+$Width	=> '100%'
+$Post	=> ''
+$CBItem => ''
+$BG	=> ''
+$Delete	=> 0
+</%ARGS>

@@ -1,0 +1,192 @@
+%# If God is dead, who will save the Queen?
+
+</form><form action="index.html" method="POST">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+<input type="hidden" name="Member" value="<% $Member %>">
+<input type="hidden" name="BeginMember" value="<% $BeginMember %>">
+
+<table width="360" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td height="19">
+% if ($Item != $RT::Nothing and !$Item->Description) {
+    <& /Edit/Elements/Tabs, Map => $Map, Show => $Show, Begin => $Begin, Group => $Group &>
+% } else {
+    <& /Edit/Elements/Tabs, Map => $Map, Show => $Show, Begin => $Begin, Group => $Group, Skip => 'Admin' &>
+% }
+    </td>
+  </tr>
+  <tr> 
+    <td class="tableEmboss">
+      <table width="100%" border="0" cellspacing="4" cellpadding="0">
+        <tr>
+          <td><FIELDSET><LEGEND><&|/l&>Roles</&></LEGEND>
+<table width="100%" border="0" cellspacing="4" cellpadding="0">
+  <tr>
+                <td> 
+		    <& /Edit/Elements/Button, Name => "Action-AddMember", Image => "funcAdd", Text => "Add", Disabled => (!$Group or $roleCount > $Roles->Count or ($isHRMS and !$Item->UserMembersObj->Count)), Javascript => $m->scomp('/Edit/Elements/NewWindow', "Members/Add.html?Show=$Show&Group=$Group&Begin=$Begin", 670, 395) &>
+		    <& /Edit/Elements/Button, Name => "Action-SaveMember", Image => "funcSave", Text => "Save", Disabled => (!$Group or !defined($Member) or $Member > 0) &>
+		    <& /Edit/Elements/Button, Name => "Action-DeleteMember", Image => "funcDelete", Text => "Delete", Disabled => (!$Group or !defined($Member) or $Member > 0) &>
+                </td>
+  </tr>
+  <tr>
+    <td>
+      <table border="0" cellpadding="0" align="center" cellspacing="0" width="100%">
+        <tr> 
+          <td height="24"><nobr><&|/l&>Role Name</&>&nbsp;</nobr></td>
+          <td height="24" width="100%"> 
+	    <select <% $Member > 0 ? 'disabled' : '' %> <% $disabled %> name="Role" style="width:100%">
+	      <option value="0" <% $Member ? '' : 'selected' %>>(<&|/l&>none</&>)</option>
+% if ($Member > 0) {
+%   my $Job = $UserObj->table($UserObj->normalize($UserObj->table('employee'), 'job'))->{$Member};
+	      <option value="<% $Job->{job_id} %>" selected><% $Job->{job_cname} %></option>
+% } elsif (defined $Member) {
+%   while (my $Role = $Roles->Next) {
+%	      my $selected = 'selected' if $Role->Id == -$Member;
+	      <option value="<% -($Role->Id) %>" <% $selected %>><% $Role->Name %></option>
+%   }
+% }
+	    </select>
+          </td>
+        </tr>
+        <tr> 
+          <td height="24"><nobr><&|/l&>Role Members</&>&nbsp;</nobr></td>
+          <td height="24"> 
+            <input <% $Member > 0 ? 'disabled' : '' %> <% $disabled %> type="button" name="Submit" value="<&|/l&>Configuration</&>" onClick="<& /Edit/Elements/NewWindow, "Members/Add.html?Show=$Show&Group=$Group&Begin=$Begin&Fixed=1&Member=" . abs($Member), 550, 365 &>">
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  <tr><td>
+      <& Members/List, List => $List, PreBegin => $Begin, Begin => $BeginMember, Item => $SubItem, Group => $Group, Show => $Show &>
+  </td></tr>
+</table>
+</FIELDSET></td>
+        </tr>
+        <tr>
+          <td><FIELDSET > <LEGEND><&|/l&>Subgroup</&></LEGEND>
+	  <table width="100%" border="0" cellspacing="4" cellpadding="0">
+	    <tr><td><& MemberGroups/index.html, Item => $Item &></td></tr>
+	  </table></FIELDSET></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $isHRMS = $Item->Description;
+my $List = [];
+
+if ($isHRMS)  {
+    my $Members = $Item->UserMembersObj || $RT::Nothing;
+    my %jobs;
+    my %job_name;
+    while (my $member = $Members->Next) {
+	my $user = $member;
+	$user->ExternalAuthId or next;
+	my $job_id = $user->val('job');
+	push @{$jobs{$job_id}}, $user;
+	$job_name{$job_id} ||= $user->get('job');
+    }
+
+    while (my ($job_id, $users) = each %jobs) {
+	push @$List, {
+	    Name    => $job_name{$job_id},
+	    Id	    => $job_id,
+	    Members => $jobs{$job_id},
+	}
+    }
+}
+
+my $Roles = RT::Groups->new($session{'CurrentUser'});
+$Roles->LimitToRolesForGroup();
+$Roles->OrderBy( FIELD => 'Name' );
+
+my $RoleMap = $Roles->RoleMap;
+
+if ($Action eq 'SaveMember' and $Member != $Role) {
+    $RoleMap->{$Group}{-$Role}{$_} = 1
+	foreach keys %{$RoleMap->{$Group}{-$Member}||{}};
+    delete $RoleMap->{$Group}{-$Member};
+    $Roles->SetRoleMap($RoleMap);
+    $Member = $Role;
+}
+elsif ($Action eq 'DeleteMember' and defined($Member)) {
+    if (!$isHRMS) {
+	my %seen;
+	$Member ||= 0;
+	my $Object = RT::Group->new($session{'CurrentUser'});
+	$Object->Load($Group) || Abort(loc("Couldn't load group [_1]",$Group));
+	while (my ($role, $members) = each %{$RoleMap->{$Group}} ) {
+	    next if $role == $Member;
+	    $seen{$_}++ foreach keys %$members;
+	}
+	foreach my $user ( keys %{$RoleMap->{$Group}{-$Member}||{}} ) {
+	    $Object->DeleteMember( $user ) unless $seen{$user};
+	}
+    }
+    delete $RoleMap->{$Group}{-$Member};
+    $Roles->SetRoleMap($RoleMap);
+    $Member = undef;
+}
+
+my $roleCount = 0;
+if (my $map = $RoleMap->{$Item->Id}) {
+    while (my ($role, $members) = each %$map) {
+	next unless $members and %$members;
+	my (%seen, @members);
+	foreach my $user (keys %$members) {
+	    my $UserObj = RT::User->new($session{'CurrentUser'});
+	    $UserObj->Load($user);
+	    $UserObj->Id or next;
+	    push @members, $UserObj;
+	    $seen{$UserObj->Id}++;
+	}
+	my $RoleObj = RT::Group->new($session{'CurrentUser'});
+	$RoleObj->Load( $role );
+	if ($RoleObj->Id) {
+	    push @$List, {
+		Name	=> $RoleObj->Name, 
+		Id	=> -$RoleObj->Id,
+		Members	=> \@members,
+	    } unless $RoleObj->Disabled;
+	}
+	else {
+	    push @$List, {
+		Name	=> '',
+		Id	=> 0,
+		Members	=> \@members,
+	    };
+	}
+
+	$roleCount++;
+    }
+}
+
+my $Jobs = [];
+my $disabled = 'disabled';
+my $readonly = 'disabled';
+my $SubItem = {};
+my $SubJob = '';
+
+my $UserObj = $session{CurrentUser}->UserObj;
+
+$readonly = '' unless $Item->Description;
+$disabled = '' if defined($Member);
+@$List = sort { $a->{Name} cmp $b->{Name} } @$List;
+
+$SubItem = { Id => $Member } if defined($Member);
+
+</%INIT>
+<%ARGS>
+$Show => 'Member'
+$Begin => 0
+$BeginMember => 0
+$Member => undef
+$Group => 0
+$Map => {}
+$Item => $RT::Nothing
+$Action => ''
+$Role => 0
+</%ARGS>

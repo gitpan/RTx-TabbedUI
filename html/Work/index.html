@@ -1,0 +1,6 @@
+%# Better dead than mellow.
+<& /Work/Overview/index.html &>
+<%INIT>
+*NOTHING::AUTOLOAD = sub {''} unless ($RT::Nothing);
+$RT::Nothing ||= bless(\(my $x), 'NOTHING');
+</%INIT>

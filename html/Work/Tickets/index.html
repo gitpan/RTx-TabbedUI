@@ -1,0 +1,106 @@
+%# "He's the kind of man for the times that need the kind of man he is ..."
+
+<& /Work/Elements/104Header, Title => 'My Tickets', Action => '/Work/Tickets/index.html' &>
+<& /Work/Elements/SelectSearch, Categories => \%Categories, Category => $Category, ShowApproving => 1, %ARGS &>
+<& /Work/Elements/List, List => $List, Begin => $Begin, URL => '/Work/Tickets/Display.html', ARGS => \%ARGS, Role => 'owner' &>
+<& /Work/Elements/104Footer &>
+
+<%INIT>
+$session{'WorkPage'} = '/Work/Tickets/';
+$session{'CcSet'} = 0;
+
+my %Categories;
+my $List = [];
+
+my $clause = "SELECT Id FROM Tickets WHERE Type = 'ticket' AND ( Owner = ";
+$clause .= $session{'CurrentUser'}->UserObj->Id;
+
+# now, get additional owners (people that delegates to us)
+my $Groups = RT::Groups->new( $session{'CurrentUser'} );
+$Groups->Limit( FIELD => 'Domain', OPERATOR => '=', VALUE => 'Personal' );
+$Groups->Limit(
+    FIELD => 'Description',
+    OPERATOR => '=',
+    VALUE => $session{'CurrentUser'}->UserObj->PrincipalId
+);
+
+while (my $Group = $Groups->Next) {
+    next if $Group->Disabled; 
+    $clause .= " OR ( Owner = " . $Group->Instance
+	     . " AND Queue = " . $Group->Name . ")";
+}
+
+$clause .= ") AND ( " . join(
+    ' OR ', map "Status = '$_'",
+    (($Status eq 'resolved')
+	? (grep !/deleted/, RT::Queue->InactiveStatusArray)
+	: RT::Queue->ActiveStatusArray)
+);
+
+#if (length $Category) {
+    my @queues;
+    my $QueuesObj = RT::Queues->new($session{'CurrentUser'});
+    $QueuesObj->UnLimit;
+    while (my $queue = $QueuesObj->Next) {
+	my $descr = $queue->Description;
+	$Categories{$descr}++ if length $descr;
+	next if length $Category and $descr ne $Category;
+	push @queues, $queue->Id;
+    }
+    $clause .= ") AND ( " . join( ' OR ', map "Queue = '$_'", @queues ) if length($Category);
+#}
+
+if ($CreatedBefore) {
+    $CreatedBefore =~ s!/!-!g;
+    my $created_before = RT::Date->new( $session{'CurrentUser'} );
+    $created_before->Set( Format => 'unknown', Value => $CreatedBefore );
+    $clause .= ") AND ( CreatedBefore <= '" . $created_before->ISO . "' ";
+}
+
+if ($CreatedAfter) {
+    $CreatedAfter =~ s!/!-!g;
+    my $created_after = RT::Date->new( $session{'CurrentUser'} );
+    $created_after->Set( Format => 'unknown', Value => $CreatedAfter );
+    $clause .= ") AND ( CreatedAfter >= '" . $created_after->ISO . "' ";
+}
+
+# also consider AdminCcs as potential approvers.
+#my $group_tickets = RT::Tickets->new( $session{'CurrentUser'} );
+#$group_tickets->LimitWatcher( TYPE => 'AdminCC', VALUE => $session{'CurrentUser'}->UserObj->Id);
+
+$clause .= ") ORDER BY Created DESC;";
+
+my ($IDMap, %done);
+
+my $tickets = $RT::Handle->dbh->selectcol_arrayref($clause);
+
+my $ID;
+foreach my $TicketId (@$tickets) {
+    my $TicketObj = RT::Ticket->new($session{CurrentUser});
+    $TicketObj->Load($TicketId);
+
+    if ($RT::OIN104 and ($ID or $Requestor and $Requestor =~ /^[-\w]+$/)) {
+	# if it looks like a employee_no, try to identify it as such.
+	if ($ID ||= RT::User->no_to_id($Requestor)) {
+	    $Requestor = undef;
+	    my $ext_id = eval { $TicketObj->FirstRequestor->ExternalAuthId } or next;
+	    next unless $ext_id == $ID;
+	}
+    }
+
+    if ($Requestor) {
+	my $name = eval { $TicketObj->FirstRequestor->Name } or next;
+	next unless index($name, $Requestor) > -1;
+    }
+    push @$List, $TicketObj if (($Status ne 'approving') xor $TicketObj->HasUnresolvedDependencies);
+}
+
+</%INIT>
+<%ARGS>
+$Category	=> ''
+$Begin		=> 0
+$Status		=> 'unresolved'
+$CreatedBefore	=> ''
+$CreatedAfter	=> ''
+$Requestor	=> ''
+</%ARGS>

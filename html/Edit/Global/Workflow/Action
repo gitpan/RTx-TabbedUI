@@ -1,0 +1,114 @@
+%# Pardo's First Postulate:
+%# 	Anything good in life is either illegal, immoral, or fattening.
+%# Arnold's Addendum:
+%# 	Everything else causes cancer in rats.
+
+<table width="98%" border="0" cellspacing="4" cellpadding="0"  align=center>
+  <tr> 
+    <td valign="top" > 
+      <table border="0" cellspacing="0" cellpadding="2" width="100%" align="center" class="fixed"><COL width=24px><COL width=100px>
+          <tr  valign="middle"> 
+            <td>&nbsp;
+	    </td><td>
+		<nobr><&|/l&>Description</&>&nbsp;</nobr>
+	    </td><td>
+		<input <% $disabled %> <% $IsAlias %> type="text" value="<% $Item->Subject %>" name="SetSubject" style="width:100%">
+	    </td>
+          </tr>
+        <tr> 
+          <td   align="right" width="24">
+                <input <% $disabled %> <% $IsAlias %> type="radio" name="SetType" value="approval"
+				   <% (!$IsAlias and $Item->Type eq 'approval') ? 'CHECKED' : '' %>>
+		</td>
+          <td  width="80"><nobr><&|/l&>Run Approval</&><nobr></td>
+          <td width="100%"> 
+              <input <% $disabled %> type="button" name="Submit" value="<&|/l&>Approver Setting</&>" onclick="<& /Edit/Elements/NewWindow, "/Edit/Global/Workflow/Owner.html?Queue=$Queue&Entry=" . $Item->Id . "&Parent=" . $ParentItem->Id, 500, 220 &>">
+            </td>
+          </tr>
+          <tr> 
+            
+          <td  align="right">
+                <input <% $disabled %> <% $no_alias %> type="radio" name="SetType" value="alias"
+				   <% ($IsAlias) ? 'CHECKED' : '' %>>
+	    </td>
+            
+          <td ><nobr><&|/l&>Alias</&>&nbsp;</nobr></td>
+            
+          <td>
+            <select <% $disabled %> <% $no_alias %> name="SetAliasFor" style="width:100%">
+                <option></option>
+% foreach my $Entry ( sort { $a->{Alias} <=> $b->{Alias} } values %{$List->Entries} ) {
+%     next if $Entry->HasChildRecursive($Item) or $ParentItem->HasChild($Entry);
+                <option value="<% $Entry->{Id} %>"><% $Entry->{Alias} %>: <% $Entry->Subject %></option>
+% }
+              </select>
+		</td>
+          </tr>
+          <tr> 
+            
+          <td  align="right"> 
+                <input <% $disabled %> <% $IsAlias %> type="radio" name="SetType" value="code"
+				   <% (!$IsAlias and $Item->Type eq 'code') ? 'CHECKED' : '' %>>
+		</td>
+            
+          <td ><nobr><&|/l&>Code</&><nobr></td>
+           <td >
+            <select <% $disabled %> <% $IsAlias %> name="SetActionProcedure" style="width:100%">
+                <option></option>
+%     my $UserObj = $session{CurrentUser}->UserObj;
+%     my $Table = $UserObj->procedures_cname();
+%     my $ActionProcedure = $Item->ActionProcedure;
+
+%     foreach my $key (qw(AutoResolve AutoReject)) {
+%	    my $selected = 'SELECTED' if $ActionProcedure and $ActionProcedure eq $key;
+                <option value="<% $key %>" <% $selected %>><% loc($key) %></option>
+%     }
+%     foreach my $key (sort { $a <=> $b } keys %$Table) {
+%	    my $selected = 'SELECTED' if $ActionProcedure and $ActionProcedure eq $key;
+	    <option value="<% $key %>" <% $selected %>><% $Table->{$key} %></option>
+%     }
+              </select>
+		    </td>
+          </tr>
+          <tr valign="top"> 
+          <td  align="right">&nbsp;</td>
+          <td height=81><nobr><&|/l&>Parameter</&><nobr></td>
+           <td >
+            <select <% $disabled %> <% $IsAlias %> name="SetActionFields" style="width:100%" size=5 multiple>
+% while( my $cf = $CFs->Next() ) {
+%	    my $cf_id = $cf->Id;
+%	    my $selected = 'SELECTED' if $Item->ActionFields and $Item->ActionFields =~ /\b\Q$cf_id\E\b/;
+                <option <% $selected %> value="<% $cf->Id %>"><% $cf->Name %></option>
+% }
+              </select>
+		    </td>
+          </tr>
+        </table>
+      
+    </td>
+  </tr>
+</table>
+<%INIT>
+$Item = $RT::Nothing unless UNIVERSAL::can($Item, 'ConditionSatisfy');
+my $disabled = 'disabled' if ($Item == $RT::Nothing);
+my $CFs;
+
+if ($QueueObj->Id) {
+    $CFs = $QueueObj->CustomFields;
+}
+else {
+    $CFs = RT::CustomFields->new($session{'CurrentUser'});
+    $CFs->LimitToGlobal();
+}
+
+my $no_alias = 'disabled' if $Item->NextStates;
+
+</%INIT>
+<%ARGS>
+$List
+$Item
+$ParentItem
+$QueueObj
+$Queue
+$IsAlias
+</%ARGS>

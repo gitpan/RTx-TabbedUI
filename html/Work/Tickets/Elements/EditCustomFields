@@ -1,0 +1,83 @@
+%# The Heineken Uncertainty Principle:
+%# 	You can never be sure how many beers you had last night.
+
+%# Custom Fields {{{
+% my @entry_fields;
+% while( my $cf = $CustomFields->Next() ) {
+%   if ($cf->IsEntry) {
+%     push @entry_fields, $cf;
+%     next;
+%   }
+%   elsif (@entry_fields) {
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Details</&>
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+<& /Work/Tickets/Elements/EditCustomFieldEntries, Prefix => 'AddEntry-', CustomFields => \@entry_fields, TempValues => $Entries, TicketObj => $Ticket, ReadOnly => $ReadOnly &>
+</td></tr>
+%    @entry_fields = ();
+%  }
+
+%   if ($cf->Type =~ /^Label(.+)$/ and $1 ne 'URL') {
+%     $m->comp("/Work/Tickets/Elements/$ShowOrAdd$1", Description => $cf->Description, Subject => $Ticket->Subject, %ARGS) unless $NoCF->{$1}++ or ($1 ne 'Attachments' and $ShowOrAdd eq 'Show');
+%     next;
+%   }
+
+%   next if $cf->Attribute('OnChange') eq 'hidden';
+
+<tr valign="top"><td width=65><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle">
+%   if ($cf->Type eq 'FreeformExternal') {
+%       my $descr = $session{CurrentUser}->UserObj->describe($cf->Description);
+    <% $descr || $cf->Name %>
+%   } elsif ($cf->Type eq 'SelectExternal') {
+%       my $descr = $session{CurrentUser}->UserObj->field_cname($cf->Description);
+    <% $descr || $cf->Name %>
+%   } elsif ($cf->Type eq 'LabelURL') {
+%   my $UserObj = $Ticket->FirstRequestor;
+%   my $url = $cf->Name;
+%   $url =~ s/\$(\w+)/$UserObj->val($1)/eg;
+    </nobr></td><td>&nbsp;</td><td><a <% $url =~ /^\w+:/ ? 'href=' : 'name=' %>"<% $url %>">
+%   $m->print($cf->Description);
+</a></td></tr>
+%     next;
+%   } elsif ($Loc) {
+    <% loc($cf->Description || $cf->Name) %>
+%   } else {
+    <% $cf->Description || $cf->Name %>
+%   }
+&nbsp;</nobr></td><td><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td><& /Work/Tickets/Elements/EditCustomField,
+    Name	=> 'CustomField-'.$cf->Id,
+    CustomField	=> $cf,
+    TicketObj	=> $Ticket,
+    NamePrefix	=> "Ticket-" . $Ticket->Id . "-CustomField-",
+    ReadOnly	=> ($ReadOnly || ($cf->Attribute('OnChange') eq 'readonly')),
+    Queue	=> $Ticket->Queue,
+    Loc		=> $Loc &>
+</td></tr>
+% }
+%# }}}
+
+% if (@entry_fields) {
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+<&|/l&>Details</&>
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+<& /Work/Tickets/Elements/EditCustomFieldEntries, Prefix => 'AddEntry-', CustomFields => \@entry_fields, TempValues => $Entries, TicketObj => $Ticket, ReadOnly => $ReadOnly &>
+</td></tr>
+%    @entry_fields = ();
+% }
+
+% if ($ShowOrAdd eq 'Show' and !$NoCF->{Attachments}++) {
+%     $m->comp("/Work/Tickets/Elements/${ShowOrAdd}Attachments", %ARGS, Optional => 1, Subject => $Ticket->Subject);
+% }
+
+<%INIT>
+my $CustomFields = $Ticket->QueueObj->CustomFields();
+my $Entries;
+$ShowOrAdd ||= ($ReadOnly ? 'Show' : 'Add');
+</%INIT>
+<%ARGS>
+$Ticket	    => undef
+$ReadOnly   => undef
+$ShowOrAdd  => undef
+$NoCF	    => {}
+$Loc	    => 0
+</%ARGS>

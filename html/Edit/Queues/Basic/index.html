@@ -1,0 +1,119 @@
+%# A banker is a fellow who lends you his umbrella when the sun is shining
+%# and wants it back the minute it begins to rain.
+%# 		-- Mark Twain
+
+<& /Edit/Elements/104Header,
+    Buttons => [
+	Add => "index.html?Action-Add=1",
+	Save => ($Queue ? "javascript:document.getElementById('mainform').submit()" : ''),
+	Delete => '',
+	Copy => '',
+	Search => '',
+    ],
+    Method => 'POST',
+&>
+
+<input type="hidden" name="Queue" value="<% $Queue %>">
+
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Queues' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+		<td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '/Edit/Queues/Basic/' &></td>
+              </tr>
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4" class="fixed"><COL width="100%">
+                    <tr> 
+                      <td bgcolor="#82D1EC" class="poptable" valign="bottom" > 
+                          <nobr><&|/l&>Queue Name</&>: <% $QueueObj->Name %></nobr></td>
+                    </tr>
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+			  <tr> 
+			    <td><& /Edit/Elements/Tabs, Name => 'Map2', Map => $ARGS{Map2}, URL => '../Basic/' &></td>
+			  </tr>
+			  <tr> 
+			    <td class="poptable" bgcolor="#C4E1F0"><& Top, Item => $QueueObj, List => $List, Categories => \%Categories, Users => $Users, Owner => $Owner &></td>
+			  </tr>
+			</table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my %Categories;
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit;
+
+$Categories{$_}++ for @{ $Queues->Categories };
+
+while (my $queue = $Queues->Next) {
+    my $descr = $queue->Description;
+    $Categories{$descr}++ if length $descr;
+}
+
+my $List = [ sort keys %Categories ];
+$Queues->SetCategories( $List );
+
+if ($Action eq 'Add') {
+    # create a new Queue!
+    $QueueObj = RT::Queue->new($session{'CurrentUser'});
+    $QueueObj->Load('(new)');
+    if (!$QueueObj->Id) {
+	$QueueObj->Create(
+	    Name        => '(new)',
+	    Description => $List->[0],
+	    Disabled    => 0,
+	);
+    }
+    $Queue = $QueueObj->Id;
+    $QueueObj->UpdateCompany;
+}
+elsif ($Action eq 'Delete' and $QueueObj->Id) {
+    $QueueObj->SetDisabled(1);
+    return $m->comp('/Edit/Queues/index.html');
+}
+elsif ($Action eq 'Save' and $QueueObj->Id) {
+    # update the current queue
+    foreach my $method (grep /^Set/, keys %ARGS) {
+	my $key = substr($method, 3);
+	$QueueObj->$method($ARGS{$method}) unless $QueueObj->$key eq $ARGS{$method};
+    }
+    foreach my $method (grep /^Attr/, keys %ARGS) {
+	my $key = substr($method, 4);
+	$QueueObj->SetAttribute($key => $ARGS{$method});
+    }
+}
+
+my $Owner = $RT::Nothing;
+my $Users = [];
+my $AdminCc;
+
+if ($QueueObj != $RT::Nothing) {
+    $AdminCc = $QueueObj->AdminCc;
+    $Owner = $AdminCc->UserMembersObj->First || $RT::Nothing;
+}
+
+</%INIT>
+<%ARGS>
+$Action => "Save"
+$Queue => undef
+$QueueObj => undef
+</%ARGS>

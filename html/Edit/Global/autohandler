@@ -1,0 +1,14 @@
+%# Remember that whatever misfortune may be your lot, it could only be
+%# worse in Cleveland.
+%#		-- National Lampoon, "Deteriorata"
+<%INIT>
+$m->call_next(Map => [
+    '../Basic/'		=> 'Basics',		# loc
+    '../CustomField/'	=> 'Custom Fields',	# loc
+    '../Template/'	=> 'Templates ',	# loc
+    '../Scrip/'		=> 'Scrips ',		# loc
+    '../Workflow/'	=> 'Workflows',		# loc
+    '../UserRight/'	=> 'User Rights',	# loc
+    '../GroupRight/'	=> 'Group Rights',	# loc
+], %ARGS);
+</%INIT>

@@ -1,0 +1,98 @@
+%# Man is the only animal that can remain on friendly terms with the
+%# victims he intends to eat until he eats them.
+%#		-- Samuel Butler
+
+</form><form name="infoform" id="infoform" method="post" action="index.html">
+<input type="hidden" name="Queue" value="<% $Item->Id %>">
+<input type="hidden" name="Category" value="<% $Category %>">
+% if (!$Details) {
+    <input type="hidden" name="Show" value="Delegate">
+    <input type="hidden" name="User" value="<% $ARGS{UID} %>">
+    <input type="hidden" name="Begin" value="<% $ARGS{BID} %>">
+    <input type="hidden" name="BeginDelegate" value="<% $ARGS{Begin} %>">
+% }
+<input type="hidden" name="Action-Save" value="1">
+
+<table width="100%" border="0" cellspacing="0" cellpadding="2">
+    <tr> 
+	<td class="tableTitle" ><&|/l&>Delegates Info</&></td>
+    </tr>
+    <tr> 
+	<td class="poptable" height="<% $Details ? 380 : 110 %>" valign="top"> 
+	    <& /Work/Elements/Button, Name => 'Action-Save', Image => 'funcSave', Text => 'Save', Disabled => $disabled &>
+	<table border="0" cellspacing="3" cellpadding="1" align="center" width="90%">
+	    <tr> 
+	    <td colspan="2"></td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Delegates</&></td>
+	    <td>
+	      <select name="SetDelegate" style="width:100%" <% $disabled %>>
+		<option value=""><&|/l&>none</&></option>
+% foreach my $UserObj (@$Users) {
+		<option value="<% $UserObj->Id %>" <% ($UserObj->Id == $User->Id) ? 'selected' : '' %>>[<% $UserObj->get('no') %>] <% $UserObj->Name %></option>
+% }
+	      </select>
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Delegates Status</&></td>
+	    <td>
+		<input <% $Disabled ? '' : 'checked' %> <% $disabled %> type="radio" name="SetDisabled" value="0"><&|/l&>Open</&>
+		<input <% $Disabled ? 'checked' : '' %> <% $disabled %> type="radio" name="SetDisabled" value="1"><&|/l&>Disabled</&>
+	    </td>
+	    </tr>
+% if ($Details) {
+	    <tr><td colspan=2><hr></td></tr>
+	    <tr> 
+	    <td>First Name</td>
+	    <td>
+		<input value="<% $User->get('firstname') %>" class="wro" readonly <% $disabled %> type="text" name="FirstName" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td>Last Name</td>
+	    <td>
+		<input value="<% $User->get('lastname') %>" class="wro" readonly <% $disabled %> type="text" name="LastName" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Department Name</&></td>
+	    <td>
+		<input value="<% $User->get('department') %>" class="wro" readonly <% $disabled %> type="text" name="Department" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Position Name</&></td>
+	    <td>
+		<input value="<% $User->get('job') %>" class="wro" readonly <% $disabled %> type="text" name="textfield222665" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Phone number</&></td>
+	    <td>
+		<input value="<% $User->WorkPhone %>" class="wro" readonly <% $disabled %> type="text" name="Phone" size="30" style="width:100%">
+	    </td>
+	    </tr>
+	    <tr> 
+	    <td><&|/l&>Email</&></td>
+	    <td>
+		<input value="<% $User->EmailAddress %>" class="wro" readonly <% $disabled %> type="text" name="Email" size="30" style="width:100%">
+	    </td>
+	    </tr>
+% }
+	</table>
+	</td>
+    </tr>
+</table>
+<%INIT>
+my $disabled = 'disabled' unless $Item->Id;
+</%INIT>
+<%ARGS>
+$Item	    => $RT::Nothing
+$Users	    => []
+$User	    => $RT::Nothing
+$Disabled   => 0
+$Category   => ''
+$Details    => 1
+</%ARGS>

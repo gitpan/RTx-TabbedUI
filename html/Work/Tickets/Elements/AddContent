@@ -1,0 +1,29 @@
+%# Celebrate Hannibal Day this year.  Take an elephant to lunch.
+
+<tr><td valign="top"><p><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle">
+% if (defined($Description)) {
+<% $Loc ? loc($Description) : $Description %>
+% } elsif (exists $ARGS{UpdateType}) {
+<&|/l&>Comments</&>
+% } else {
+<&|/l&>Notes</&>
+% }
+</nobr></p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td>
+% if (exists $ARGS{UpdateType}) {
+%     if (exists $ARGS{UpdateContent}) {
+<& /Work/Elements/MessageBox, Name => "UpdateContent", Default => $ARGS{UpdateContent}, %ARGS&>
+%     } else {
+<& /Work/Elements/MessageBox, Name => "UpdateContent", %ARGS &>
+%     }
+% } else {
+%     if (exists $ARGS{Content}) {
+<& /Work/Elements/MessageBox, Default => $ARGS{Content} &>
+%     } else {
+<& /Work/Elements/MessageBox, QuoteTransaction => $ARGS{QuoteTransaction} &>
+%     }
+% }
+</td></tr>
+<%ARGS>
+$Description => undef
+$Loc => 0
+</%ARGS>

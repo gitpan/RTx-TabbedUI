@@ -1,0 +1,50 @@
+%# One learns to itch where one can scratch.  -- Ernest Bramah
+
+  <tr> 
+    <td class="tableEmboss">
+      <table width="100%" border="0" cellspacing="4" cellpadding="0">
+        <tr> 
+          <td height="520" valign="top"> 
+            <table border="0" cellspacing="0" cellpadding="0" align="center" width="95%">
+% while (my($k, $v) = splice(@Show, 0, 2)) {
+                <tr> 
+                  <td><nobr><% loc($v) %>&nbsp;</nobr></td>
+                  <td width="90%">
+                    <input value="<% $k ? $Item->get($k) : '' %>" type="text" style="width:100%" readonly class="ero" >
+                  </td>
+                </tr>
+% }
+              </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+<%INIT>
+my @Show = (
+    'birthday' => 'Birthday', # loc
+    'sex' => 'Gender', # loc
+    'nationality' => 'Nationality', # loc
+($RT::OIN104) ? (
+    'cripples_identity_class' => 'Disability Type', # loc
+) : (),
+    'cripples_identity' => 'Disability', # loc
+    'office_tel_1' => 'Office Phone', # loc
+    'hire_date' => 'Reported on', # loc
+    'test_end_date' => 'End of Trial', # loc
+    'work_status' => 'Occupation Status', # loc
+    'type' => 'Indirect Employee', # loc
+    'section_type' => 'User Shift', # loc
+    'section_id' => 'Shift Type', # loc
+    'topic_first_boss_id' => 'First-level Users', # loc
+    'topic_second_boss_id' => 'Second-level Users', # loc
+    'company' => 'Company Name', # loc
+    'grade' => 'Position Level', # loc
+    'level' => 'Position Rank', # loc
+    'responsibility' => 'Responsibility Type', # loc
+    'is_card' => 'Report to Duty', # loc
+);
+</%INIT>
+<%ARGS>
+$Item	=> $RT::Nothing
+</%ARGS>

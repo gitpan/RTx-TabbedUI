@@ -1,0 +1,25 @@
+%# A banker is a fellow who lends you his umbrella when the sun is shining
+%# and wants it back the minute it begins to rain.
+%# 		-- Mark Twain
+
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => $ARGS{Text} &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4">
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+			  <tr> 
+			    <td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => $ARGS{URL} &></td>
+			  </tr>
+			  <tr> 
+			      <td class="poptable" bgcolor="#C4E1F0">

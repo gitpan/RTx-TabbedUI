@@ -1,0 +1,63 @@
+<%perl>
+     my ($ticket, $trans,$attach, $filename);
+     my $arg = $m->dhandler_arg || $r->uri;                # get rest of path
+     if ($arg =~ '\b(\d+)/(\d+)') {
+        $trans = $1;
+        $attach = $2;
+     }
+    else {
+        Abort("Corrupted attachment URL");
+        }
+     my $AttachmentObj = new RT::Attachment($session{'CurrentUser'});
+     $AttachmentObj->Load($attach) || Abort("Attachment '$attach' could not be loaded");
+
+
+     unless ($AttachmentObj->id) {
+        Abort("Bad attachment id. Couldn't find attachment '$attach'\n");
+    }
+     unless ($AttachmentObj->TransactionId() == $trans ) {
+        Abort("Bad transaction number for attachment. $trans should be".$AttachmentObj->TransactionId() ."\n");
+
+     }
+
+    if ($AttachmentObj->ContentType eq 'text/plain' and !$AttachmentObj->OriginalEncoding) {
+	$AttachmentObj->__Set(
+	    Field => 'Headers',
+	    Value => "X-RT-Original-Encoding: big5\n" .  $AttachmentObj->Headers()
+	);
+	require Encode::Guess;
+	Encode::Guess->set_suspects(@RT::EmailInputEncodings);
+	$AttachmentObj->__Set(
+	    Field => 'Content',
+	    Value => Encode::encode_utf8(Encode::decode(
+		'Guess' => $AttachmentObj->_Value('Content', decode_utf8 => 0)
+	    )),
+	);
+    }
+     my $content_type =  $AttachmentObj->ContentType || 'text/plain';
+        
+     unless ($RT::TrustHTMLAttachments) {
+         $content_type = 'text/plain' if ($content_type =~ /^text\/html/i);
+     }
+
+     if (my $enc = $AttachmentObj->OriginalEncoding) {
+	# normalize Encode.pm convention with IANA ones
+        $enc = 'big5'  if $enc eq 'big5-eten';
+        $enc = 'utf-8' if $enc eq 'utf8';
+	$content_type .= ";charset=$enc";
+     }
+
+     unless ($RT::TrustMIMEAttachments) {
+         $content_type = (
+	    $RT::IsMSIE ? 'application/x-msdownload'
+			: 'application/octet-stream'
+	 ) unless $content_type =~ /^text\/plain/ and $RT::TrustTextAttachments;
+     }
+
+     $r->content_type($content_type);
+     $m->clear_buffer();
+     $m->out($AttachmentObj->OriginalContent);
+     return $AttachmentObj if $ARGS{NoUI};
+     $m->abort; 
+</%perl>
+

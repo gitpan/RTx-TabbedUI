@@ -1,0 +1,28 @@
+%# A diplomat is a man who can convince his wife she'd look stout in a fur coat.
+
+<style>
+SPAN.workflow { BORDER: 1px; HEIGHT: 19px; BACKGROUND-COLOR:transparent; TEXT-ALIGN: center }
+SPAN.workflow:hover { BORDER: #000000 1px solid; HEIGHT: 19px; BACKGROUND-COLOR: #dddddd; COLOR: #000000 }
+SPAN.current:hover { BORDER: #000000 1px solid; HEIGHT: 19px; BACKGROUND-COLOR: #dddddd; COLOR: #000000 }
+SPAN.current { TEXT-ALIGN: center; BORDER-RIGHT: #000000 1px solid; BORDER-TOP: #cccccc 1px solid; BORDER-LEFT: #cccccc 1px solid; BORDER-BOTTOM: #000000 1px solid; HEIGHT: 19px; BACKGROUND-COLOR: #ffffcc; COLOR: #000000; }
+DIV.block { height:18; color:white; background:#0066CC; text-align:center; float:left; margin:1px }
+DIV.alias { height:18; color:white; background:#999999; text-align:center; float:left; margin:1px }
+</style>
+
+<table border="0" cellspacing="0" cellpadding="0">
+  <tr><td>
+    <img alt="=" src="/img/FlowStart.png" width="35" height="28" align="absbottom">
+    <span <% $Item ? 'class=workflow' : 'class=current'%>><a href="index.html?Queue=<% $Queue %>"><&|/l&>Workflow Begin</&></a></span>
+  </td></tr>
+<& Entry, List => $List, Item => $Item, ParentItem => $ParentItem, Queue => $Queue, Seen => {} &>
+  <tr><td>
+    <img alt="=" src="/img/FlowEnd.png" width="35" height="28" align="absbottom">
+    <&|/l&>Workflow End</&>
+  </td></tr>
+</table>
+<%ARGS>
+$Queue
+$List
+$Item
+$ParentItem
+</%ARGS>

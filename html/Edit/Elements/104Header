@@ -1,0 +1,51 @@
+%# The universe does not have laws -- it has habits, and habits can be broken.
+<HTML>
+<HEAD>
+% if ($RT::OIN104) {
+<TITLE>104 Enterprise Portal</TITLE>
+% } else {
+<TITLE><&|/l, $RT::rtname &>RT for [_1]</&></TITLE>
+% }
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="-1">
+<link rel="stylesheet" href="/stylesheet/style.css" type="text/css">
+<script language=javascript src="/function/MM_openBrWindow.js"></script>
+<script language=javascript src="/function/DynaTD.js"></script>
+<script language=javascript src="/function/swapImgRestore.js"></script>
+<script language=javascript src="/function/MM_findObj.js"></script>
+<script language=javascript src="/function/showHideLayers.js"></script>
+<script language=javascript src="/function/goToURL.js"></script>
+<script language=javascript src="/function/ClearDefault.js"></script>
+<script language=javascript src="/function/Pro.js"></script>
+<& MoreStyles &>
+</HEAD>
+<BODY BGCOLOR="<% $BGColor %>" TEXT="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0"
+% $OnLoad = "document.getElementById('$Focus').focus();" . $OnLoad if $Focus;
+% $m->print(qq(onLoad="$OnLoad")) if $OnLoad;
+>
+<form name="mainform" id="mainform" style="margin: 0" action="<% $Action %>" method="<% $Method %>"
+% if ($Enctype) {
+	enctype="<% $Enctype %>"
+% }
+>
+% if ($RT::OIN104 and !$ARGS{Top}) {
+%     $m->comp('EDOMHeader') if Win32::NodeName() eq 'EDKM';
+% } else {
+    <& $Top &>
+% }
+    <& 104Buttons, Buttons => $Buttons &>
+<%INIT>
+$Action =~ s!//+!/!g;
+</%INIT>
+<%ARGS>
+$Title	    => ''
+$Method	    => 'Get'
+$Action	    => $r->uri
+$Enctype    => ''
+$OnLoad	    => ''
+$Focus	    => ''
+$Buttons    => []
+$BGColor    => '#C4E1F0'
+$Top	    => '104Top'
+</%ARGS>

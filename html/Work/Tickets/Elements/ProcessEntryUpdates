@@ -1,0 +1,90 @@
+%# Shaw's Principle:
+%#     Build a system that even a fool can use, and only a fool will
+%#     want to use it.
+
+<%PERL>
+
+my %col_ok = map { $_ => 1 } @$AddMoreEntry;
+
+if ($TicketObj) {
+    my $CustomFields = $TicketObj->QueueObj->CustomFields();
+    while (my $CustomField = $CustomFields->Next()) {
+	next unless ($CustomField->IsEntry);
+	$Entries->{$CustomField->Id} = [ map {
+	    $_->Content
+	} @{$TicketObj->CustomFieldValues($CustomField->Id)->ItemsArrayRef} ];
+    }
+}
+
+# {{{ deal with entries
+
+# update
+my ($added_entry, %bool);
+foreach my $key (keys %ARGS) {
+    if ($key =~ m/^Entry-((\d+).*)$/ and (!%col_ok or $col_ok{$2})) {
+	my $col = $1;
+	my $values = $ARGS{$key};
+
+	if ($col =~ s/-(\d+)-Boolean$//) {
+	    # this is a boolean field.
+	    $bool{$col}[$1] = 1 unless $values eq 'off';
+	    next;
+	}
+	elsif ($col =~ s/-(\d+)-Boolean-Magic$//) {
+	    $bool{$col}[$1] ||= 0;
+	}
+
+	$values = [ $values ] unless ref $values;
+	$Entries->{$col}[$_] = $values->[$_] for (0 .. $#{$values});
+    }
+}
+
+# now fill in boolean fields.
+while (my ($col, $values) = each %bool) {
+    @{$Entries->{$col}} = @$values;
+}
+
+# delete and insert
+foreach my $key (keys %ARGS) {
+    if ($key =~ m/^DeleteEntry-(.+)$/) {
+	# $1 is row, not column here!
+	foreach my $col (keys %col_ok) {
+	    splice(@{$Entries->{$col}}, $1, 1);
+	}
+    }
+    if ($key =~ m/^AddEntry-(.+)$/ and (!%col_ok or $col_ok{$1})) {
+	my $value = $ARGS{$key};
+	my $k = $1;
+	if ($k =~ s/-Boolean//) {
+	    $value = (!$value or $value eq 'off') ? '0' : '1';
+	}
+	$added_entry->{$k} = $value;
+    }
+}
+# }}}
+
+# {{{ now add back the new entries, if at least one value is given
+my $LastIndex = -1;
+my @keys = keys %col_ok;
+@keys = keys %$Entries if !%col_ok;
+foreach my $col (keys %col_ok) {
+    $LastIndex = $#{$Entries->{$col}}
+	if $#{$Entries->{$col}} > $LastIndex;
+}
+
+if (grep { $_ ne '' } values %$added_entry) {
+    $LastIndex++;
+    while (my ($col, $value) = each %$added_entry) {
+	$Entries->{$col}[$LastIndex] = (length($value) ? $value : ' ');
+    }
+}
+# }}}
+
+return $Entries;
+
+</%PERL>
+<%ARGS>
+$Entries    => {}
+$TicketObj  => undef
+$AddMoreEntry => []
+</%ARGS>

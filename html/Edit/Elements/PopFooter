@@ -1,0 +1,16 @@
+%# "They told me I was gullible ... and I believed them!"
+<div align="center"><br>
+% if ($CloseOnSubmit) {
+  <input type="button" onclick="this.form.submit();window.close();" value=" <&|/l&>Commit</&> ">
+% } else {
+  <input type="submit" name="Action-Commit" value=" <&|/l&>Commit</&> ">
+% }
+  <input type="button" onclick="window.close();" name="Action-Cancel" value=" <&|/l&>Cancel</&> ">
+</div>
+</form>
+</BODY>
+</HTML>
+% $m->abort;
+<%ARGS>
+$CloseOnSubmit => 0
+</%ARGS>

@@ -1,0 +1,35 @@
+%# Fairy Tale, n.:
+%# 	A horror story to prepare children for the newspapers.
+<HTML>
+<HEAD>
+<TITLE><% $Title %></TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="-1">
+% if (!$NoStyle) {
+<link rel="stylesheet" href="/stylesheet/style.css" type="text/css">
+<script language=javascript src="/function/MM_openBrWindow.js"></script>
+<script language=javascript src="/function/DynaTD.js"></script>
+<script language=javascript src="/function/swapImgRestore.js"></script>
+<script language=javascript src="/function/MM_findObj.js"></script>
+<script language=javascript src="/function/showHideLayers.js"></script>
+<script language=javascript src="/function/goToURL.js"></script>
+<script language=javascript src="/function/ClearDefault.js"></script>
+% }
+<script><!--
+    window.name='popup';
+    if (window.dialogArguments) { window.opener = window.dialogArguments }
+--></script>
+</HEAD>
+<BODY BGCOLOR="<% $BG %>" TEXT="#000000" leftmargin="<% $Margin %>" topmargin="<% $Margin %>" marginwidth="0" marginheight="0" scroll=no >
+<form action="<% $Action %>" method="post" target='<% $Target %>'>
+<input type="hidden" name="SessionCookie" value="<% $session{_session_id} %>">
+<input type="hidden" name="Continuation" value="1">
+<%ARGS>
+$Title	=> loc('Create')
+$Action	=> 'Add.html'
+$Target	=> 'popup'
+$BG	=> '#C4E1F0'
+$NoStyle => 0
+$Margin  => 8
+</%ARGS>

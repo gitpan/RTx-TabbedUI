@@ -1,0 +1,82 @@
+%# "Arguments with furniture are rarely productive."
+%# 		-- Kehlog Albran, "The Profit"
+
+<tr> 
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Queue Name</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+    <% $Ticket->QueueObj->Name %></td>
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Activated Date</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+    <% eval { $Ticket->CreatedObj->AsDate } %></td>
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+% if ($RT::OIN104) {
+    <&|/l&>Queue Owner</&>
+% } else {
+    <&|/l&>Owner</&>
+% }
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle">
+  </td><td>
+% my $name = $Ticket->OwnerObj->Name;
+% $name = loc('none') if $name eq 'Nobody';
+    <% $name %>
+  </td>
+</tr>
+<tr> 
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+% if ($RT::OIN104) {
+    <&|/l&>Ticket Type</&>
+% } else {
+    <&|/l&>Subject</&>
+% }
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle">
+  </td><td>
+% if ($RT::OIN104) {
+    <% $Ticket->QueueObj->Description %></td>
+% } else {
+    <% $Ticket->Subject %></td>
+% }
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+    <&|/l&>Current Status</&>
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+% if ($Ticket->HasUnresolvedDependencies ) {
+    <&|/l&>(pending approval)</&> -
+    <& ShowApprovals, Ticket => $Ticket &>
+% } else {
+    <% loc($Ticket->Status) %>
+% }
+</td>
+  <td width="75"><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+% if ($RT::OIN104) {
+    <&|/l&>Owner's Phone</&>
+% } else {
+    <&|/l&>Requestor</&>
+% }
+  </nobr></td><td width="8">
+    <img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"> 
+  </td><td>
+% if ($RT::OIN104) {
+    <% $Ticket->OwnerObj ? $Ticket->OwnerObj->WorkPhone : '' %>
+% } else {
+    <% eval { $Ticket->FirstRequestor->Name } %>
+% }
+			</td>
+</tr>
+	</table>
+    </td>
+</tr>
+<tr> 
+    <td bgcolor="#000000" height="1" colspan="2"></td>
+</tr>
+<%ARGS>
+$Ticket => undef
+</%ARGS>

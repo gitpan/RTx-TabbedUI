@@ -1,0 +1,114 @@
+%# If all the world's a stage, I want to operate the trap door.
+%# 		-- Paul Beatty
+
+<& /Edit/Elements/104Header,
+    Buttons => [
+        Add => "index.html?Action-Add=1",
+        Save => ($Id ? "javascript:document.getElementById('mainform').submit()" : ''),
+        Delete => ($Id ? "index.html?Id=$Id&Action-Delete=1" : ''),
+        Copy => ($Id ? "index.html?Id=$Id&Action-Delete=1" : ''),
+        Search => '',
+    ],
+    Method  => $Method,
+    BGColor => $BGColor,
+    Top	    => $Top,
+&>
+
+<input type="hidden" name="Id" value="<% $Id %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+    <tr> 
+	<td><& $Tab, Text => $Text &></td>
+    </tr>
+    <tr> 
+    <td class="poptable" bgcolor="#C4E1F0"> 
+	<table width="100%" border="0" cellspacing="4" cellpadding="0">
+	<tr> 
+	    <td height="480" valign="top"> 
+	    <table width="100%" border="0" cellspacing="3" cellpadding="0">
+		<tr><td class="tableEmboss" align=center valign=top><&
+		    ($m->callers(1)->dir_path . '/Top'),
+		    Item => $Item,
+		    List => $List,
+		    Fields => \@Fields,
+		&></td></tr>
+	    </table><&
+		($m->callers(1)->dir_path . '/List'),
+		Delete => 1,
+		List => $List,
+		Begin => $Begin,
+		Item => $Item,
+		ARGS => $ARGSRef,
+	    &></td></tr>
+	</tr>
+	</table>
+    </td>
+    </tr>
+    </td>
+  </tr>
+</table>
+
+<%INIT>
+my $Item = $RT::Nothing;
+my @actions;
+
+my $Begin   = $ARGSRef->{Begin} || 0;
+my $Id	    = $ARGSRef->{Id};
+
+my $package = $Class;
+$package =~ s{::}{/}g;
+require "$package.pm";
+require "${package}s.pm";
+
+my $List = "${Class}s"->new($session{'CurrentUser'});
+$List->UnLimit;
+
+if ($Id) {
+    $Item = $Class->new($session{'CurrentUser'});
+    $Item->Load( $Id );
+}
+
+my $Action = $ARGSRef->{Action} || (
+    grep defined, map { /^Action-(.+?)(?:\.[xyXY])?[012]?$/ ? $1 : undef }
+    grep length $ARGSRef->{$_}, keys %$ARGSRef
+)[0] || 'Save';
+
+if ($Action eq 'Save' and $Item) {
+    foreach my $field ( @Fields ) {
+	my $method = "Set$field";
+	$Item->$method($ARGSRef->{$field}) if exists $ARGSRef->{$field};
+    }
+}
+elsif ($Action eq 'Add') {
+    $Item = RT::ReportSource->new($session{'CurrentUser'});
+    my ($val, $msg) = $Item->Create(
+	map { $_ => '' } @Fields,
+	Name => loc('(new)'),
+    );
+    Abort(loc("Could not create item", $msg)) unless ($val);
+    $Id = $Item->Id;
+    $Begin = -1;
+}
+elsif ($Action eq 'Delete') {
+    foreach my $Id (@{$ARGSRef->{ListDelete}}) {
+	my $item = $Class->new($session{'CurrentUser'});
+	$item->Load( $Id );
+	$item->Delete;
+    }
+    $List->RedoSearch;
+    $Item = $List->First || $RT::Nothing;
+    $Begin = $Id = 0;
+}
+
+</%INIT>
+<%ARGS>
+@Fields
+$Class
+$Top
+$Tab
+$Text
+$BGColor
+$Method	=> 'POST',
+$ARGSRef
+</%ARGS>

@@ -1,0 +1,12 @@
+%# Pohl's law:
+%# 	Nothing is so good that somebody, somewhere, will not hate it.
+
+<tr><td valign="top" width="80"><p><nobr><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle">
+<% $Title %>
+</nobr></p></td><td valign="top" width="8"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td> 
+% $m->print($m->content);
+</td></tr>
+
+<%ARGS>
+$Title	=> ''
+</%ARGS>

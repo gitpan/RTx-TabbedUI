@@ -1,0 +1,94 @@
+%# Quidquid latine dictum sit, altum viditur.
+%# (Whatever is said in Latin sounds profound.)
+<table width="100%" border="0" cellspacing="4" cellpadding="0">
+  <tr> 
+    <td height="485"> <br>
+      <table width="80%" border="0" cellspacing="4" cellpadding="0" align="center" class="fixed"><COL width=130px>
+        <tr> 
+          <td width="130">&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+% while (my ($key, $type) = splice(@keys, 0, 2)) {
+%       { no strict 'refs'; $Item->{$key} = ${"RT::$key"} unless length($Item->{$key}) }
+        <tr> 
+          <td width="130"><nobr><% loc($key) %>&nbsp;</nobr></td>
+          <td> 
+%    if ($type eq 'SCALAR') {
+            <input type="text" name="Set<% $key %>" value="<% $Item->{$key} %>" style="width:100%" <% $ReadOnly && 'readonly' %> >
+%    } elsif ($type eq 'LEVEL') {
+	    <select name="Set<% $key %>" style="width:100%" <% $ReadOnly && 'disabled' %>>
+%        foreach my $option (qw( debug info notice warning error critical alert emergency )) {
+		<option value="<% $option %>" <% ($option eq $Item->{$key}) ? 'SELECTED' : '' %>><% loc($option) %></option>
+%        }
+%    } elsif ($type eq 'BOOL') {
+            <input type="radio" name="Set<% $key %>" value="1" <% $Item->{$key}
+? 'CHECKED' : '' %> <% $ReadOnly && 'disabled' %>><&|/l&>Yes</&>
+            <input type="radio" name="Set<% $key %>" value="0" <% $Item->{$key}
+? '' : 'CHECKED' %> <% $ReadOnly && 'disabled' %>><&|/l&>No</&>
+%        if ($key eq 'Sync104HRMS') {
+            <input type="button" name="SyncNow" value="<&|/l&>Sync now</&>" onclick="location.href='/401.html'">
+%        }
+%    }
+          </td>
+        </tr>
+% }
+        <tr> 
+          <td width="130">&nbsp;</td>
+          <td>&nbsp;</td>
+        </tr>
+% if (!$ReadOnly) {
+        <tr> 
+          <td colspan="2" align="center">
+	  <&|/l&>You need to restart the Request Tracker service for saved changes to take effect.</&>
+	  </td>
+        </tr>
+% }
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+
+my @keys = (
+    'rtname'		# loc
+	=> 'SCALAR',
+    'Organization'	# loc
+	=> 'SCALAR',
+    'LogToFile'		# loc
+	=> 'LEVEL',
+    'LogToFileNamed'	# loc
+	=> 'SCALAR',
+    'SMTPServer'	# loc
+	=> 'SCALAR',
+    'SMTPFrom'		# loc
+	=> 'SCALAR',
+    'AdminAddress'	# loc
+	=> 'SCALAR',
+    'ExternalURL'	# loc
+	=> 'SCALAR',
+    'ExternalDatabaseDSN'	# loc
+	=> 'SCALAR',
+    'ExternalDatabaseUser'	# loc
+	=> 'SCALAR',
+    'ExternalDatabasePass'	# loc
+	=> 'SCALAR',
+    'ChangeOwnerUI'	# loc
+	=> 'BOOL',
+    'SMTPDebug'		# loc
+	=> 'BOOL',
+    'OIN104'		# loc 	
+	=> 'BOOL',
+    'CompanySpecific'		# loc 	
+	=> 'BOOL',
+    'Sync104HRMS'		# loc 	
+	=> 'BOOL',
+);
+
+</%INIT>
+<%ARGS>
+$ReadOnly => ($^O ne 'MSWin32')
+$Item => {}
+$Categories => {}
+$Users => []
+$Owner => $RT::Nothing
+</%ARGS>

@@ -1,0 +1,7 @@
+%# George Washington was first in war, first in peace -- and the first to
+%# have his birthday juggled to make a long weekend.
+%# 		-- Ashley Cooper
+<TABLE width="100%"><tr><td colspan="2" class="tableTitle"><% $title %></td></tr>
+<%ARGS>
+$title => undef
+</%ARGS>

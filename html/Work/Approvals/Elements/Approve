@@ -1,0 +1,52 @@
+%# Legalize free-enterprise murder: why should governments have all the fun?
+<tr> 
+  <td bgcolor="#333333" height="2" colspan="2"></td>
+</tr>
+<tr bgcolor="#3798AC" valign="bottom"> 
+  <td colspan="2"><b><font color="#FFFFFF" size="3"><&|/l&>Approval</&></font></b></td>
+</tr>
+<tr> 
+  <td bgcolor="#333333" height="1" colspan="2"></td>
+</tr>
+<& /Work/Tickets/Elements/ShowHistory, 
+      Ticket => $Ticket, 
+      Collapsed => 0,
+      ShowHeaders => 0,
+      ShowTitle => 0,
+      UserOnly => 1 &>
+<tr> 
+  <td height="20" colspan="2"> 
+    <table width="100%" border="0" cellspacing="1" cellpadding="2">
+      <tr> 
+        <td class="tableTitle" height="44" width="7%"><&|/l&>Approver</&></td>
+        <td bgcolor="#FFFFFF" height="44" width="10%" class="poptable"> 
+          <div align="center"><% $session{CurrentUser}->UserObj->Name %></div>
+        </td>
+        <td class="tableTitle" height="44" width="8%"><&|/l&>Approval Status</&></td>
+        <td bgcolor="#FFFFFF" height="44" width="10%" class="poptable"> 
+            <input type="radio" name="Action" value="approve" checked onclick="
+		document.getElementById('BottomObj').focus();document.getElementById('Action-Approve').focus();">
+            <&|/l&>Approve</&><br>
+            <input type="radio" id="ActionDeny" name="Action" value="deny" onclick="
+		document.getElementById('BottomObj').focus();document.getElementById('Action-Approve').focus();">
+            <&|/l&>Deny</&><br>
+            <input type="radio" name="Action" value="none" onclick="
+		document.getElementById('BottomObj').focus();document.getElementById('Action-Approve').focus();">
+            <&|/l&>No action</&>
+        </td>
+        <td class="tableTitle" height="44" width="9%"><&|/l&>Approval Notes</&></td>
+        <td bgcolor="#FFFFFF" height="44" width="52%" class="poptable"> 
+          <div align="center"> 
+            <textarea name="Content" rows="3" style="width:100%"></textarea>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<tr> 
+  <td bgcolor="#333333" height="1" colspan="2"></td>
+</tr>
+<%ARGS>
+$Ticket
+</%ARGS>

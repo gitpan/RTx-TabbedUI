@@ -1,0 +1,63 @@
+%# Show me a man who is a good loser and I'll show you a man who is
+%# playing golf with his boss.
+<table width="100%" border="0" cellspacing="5" cellpadding="0">
+  <tr>
+    <td>
+      <table border="0" cellpadding="0" align="center" cellspacing="0" width="100%" class="fixed"><COL width=55><COL width=45%><COL width=75>
+        <tr> 
+          <td width="55"><nobr><&|/l&>User Number</&>&nbsp;</nobr></td>
+          <td width="50%"> 
+            <input value="<% $Item->get('no') %>" type="text" style="width:95%" class="ero" readonly>
+          </td>
+          <td width="55"><nobr><&|/l&>Department ID</&>&nbsp;</nobr></td>
+          <td width="50%"> 
+            <input value="<% $Item->val('department') %>" type="text" style="width:100%" class="ero" readonly>
+          </td>
+        </tr>
+        <tr> 
+          <td><nobr><&|/l&>Chinese Name</&>&nbsp;</nobr></td>
+          <td>
+            <input value="<% $Item->Name %>" type="text" style="width:95%" class="ero" readonly>
+          </td>
+          <td><nobr><&|/l&>Position Name</&>&nbsp;</nobr></td>
+          <td>
+            <input value="<% $Item->get('job') %>" type="text" style="width:100%" class="ero" readonly>
+          </td>
+        </tr>
+        <tr> 
+          <td><nobr>First Name&nbsp;</nobr></td>
+          <td > 
+            <input value="<% $Item->get('firstname') %>" type="text" style="width:95%" class="ero" readonly>
+          </td>
+          <td><nobr><&|/l&>Position Number</&>&nbsp;</nobr></td>
+          <td > 
+            <input value="<% $Item->val('job') %>" type="text" style="width:100%" class="ero" readonly>
+          </td>
+        </tr>
+        <tr> 
+          <td><nobr>Last Name&nbsp;</nobr></td>
+          <td > 
+            <input value="<% $Item->get('lastname') %>" type="text" style="width:95%" class="ero" readonly>
+          </td>
+          <td><nobr><&|/l&>User ID</&>&nbsp;</nobr></td>
+          <td > 
+            <input value="<% $Item->ExternalAuthId %>" type="text" style="width:100%" class="ero" readonly>
+          </td>
+        </tr>
+        <tr> 
+          <td><nobr><&|/l&>Department Name</&>&nbsp;</td>
+          <td > 
+            <input value="<% $Item->get('department') %>" type="text" style="width:95%" class="ero" readonly>
+          </td>
+          <td><nobr>Email&nbsp;</nobr></td>
+          <td > 
+            <input value="<% $Item->EmailAddress %>" type="text" style="width:100%" class="ero" readonly>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%ARGS>
+$Item	=> $RT::Nothing
+</%ARGS>

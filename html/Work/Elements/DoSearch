@@ -1,0 +1,58 @@
+%# Surprise your boss.  Get to work on time.
+
+<%INIT>
+if ($Status eq 'unresolved') {
+    $MyTickets->LimitStatus(VALUE => $_) for RT::Queue->ActiveStatusArray;
+}
+else {
+    $MyTickets->LimitStatus(VALUE => $_) for
+    	grep !/deleted/, RT::Queue->InactiveStatusArray;
+}
+
+if ( $CreatedBefore ) {
+    $CreatedBefore =~ s!/!-!g;
+    my $created_before = RT::Date->new( $session{'CurrentUser'} );
+    $created_before->Set( Format => 'unknown', Value => $CreatedBefore );
+    $MyTickets->LimitCreated( OPERATOR => "<=", VALUE => $created_before->ISO );
+}
+if ( $CreatedAfter ) {
+    $CreatedAfter =~ s!/!-!g;
+    my $created_after = RT::Date->new( $session{'CurrentUser'} );
+    $created_after->Set( Format => 'unknown', Value => $CreatedAfter );
+    $MyTickets->LimitCreated( OPERATOR => ">=", VALUE => $created_after->ISO );
+}
+
+if ($RT::OIN104 and $Requestor and $Requestor =~ /^[-\w]+$/) {
+    # if it looks like a employee_no, try to identify it as such.
+    if (my $id ||= RT::User->no_to_id($Requestor)) {
+	my $UserObj = RT::User->new($RT::SystemUser);
+	$UserObj->LoadByCol( ExternalAuthId => $id );
+	if ($UserObj->Id) {
+	    $MyTickets->LimitWatcher(
+		TYPE	    => 'Requestor',
+		OPERATOR    => '=',
+		VALUE	    => $UserObj->Name,
+	    );
+	    $Requestor = undef;
+	}
+    }
+}
+
+if ( $Requestor ) {
+    $MyTickets->LimitWatcher(
+	TYPE	    => 'Requestor',
+	OPERATOR    => 'LIKE',
+	VALUE	    => $Requestor,
+    );
+}
+
+$MyTickets->OrderBy(FIELD => 'Created', ORDER => 'DESC');
+
+</%INIT>
+<%ARGS>
+$MyTickets
+$Status		=> 'unresolved'
+$CreatedBefore	=> ''
+$CreatedAfter	=> ''
+$Requestor	=> ''
+</%ARGS>

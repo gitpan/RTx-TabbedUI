@@ -1,0 +1,122 @@
+%# The right half of the brain controls the left half of the body.  This
+%# means that only left handed people are in their right mind.
+<& /Edit/Elements/PopHeader &>
+
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+<input type="hidden" name="Queue" value="<% $Queue %>">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<table width="100%" border="0" cellspacing="5" cellpadding="0" class="poptable">
+  <tr>
+    <td> 
+      <table border="0" cellspacing="0" cellpadding="0" align="center">
+        <tr> 
+          <td valign="top" width="80" height="2"> 
+            <div align="left"><&|/l&>Groups</&>:</div>
+          </td>
+          <td width="80" height="2">&nbsp; </td>
+          <td valign="bottom" height="6" width="158"> <&|/l&>Create</&>:</td>
+        </tr>
+        <tr> 
+          <td valign="top" width="80"> 
+            <select name="Off" size="20" multiple style="width:235px;height:290px">
+% foreach my $Item (@$OffList) {
+	      <option value="<% $Item->Id %>"><% $Item->Name %></option>
+% }
+            </select>
+          </td>
+	  <& /Edit/Elements/ListButtons &>
+          <td valign="top" height="32" width="158"> 
+            <select name="On" size="20" multiple style="width:235px;height:290px">
+% foreach my $Item (@$List) {
+	      <option value="<% $Item->Id %>"><% $Item->Name %></option>
+% }
+            </select>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<& /Edit/Elements/PopFooter &>
+<%INIT>
+my $Object = $RT::System;
+my $List = $session{GroupRightList};
+my $OffList = $session{GroupRightOffList};
+
+if ($Queue) {
+    $Object = RT::Queue->new($session{'CurrentUser'});
+    $Object->Load($Queue) || Abort(loc("Couldn't load queue [_1]",$Queue));
+}
+elsif ($Group) {
+    $Object = RT::Group->new($session{'CurrentUser'});
+    $Object->Load($Group) || Abort(loc("Couldn't load group [_1]",$Group));
+}
+
+if ($Action eq 'Add') {
+    @$OffList = grep {
+	my $id = $_->Id;
+	my $ok = (grep { $_ == $id } @Off);
+	push @$List, $_ if $ok;
+	!$ok;
+    } @$OffList;
+}
+elsif ($Action eq 'AddAll') {
+    push @$List, @$OffList;
+    @$OffList = ();
+}
+elsif ($Action eq 'Delete') {
+    @$List = grep {
+	my $id = $_->Id;
+	my $ok = (grep { $_ == $id } @On);
+	push @$OffList, $_ if $ok;
+	!$ok;
+    } @$List;
+}
+elsif ($Action eq 'DeleteAll') {
+    push @$OffList, @$List;
+    @$List = ();
+}
+elsif ($Action eq 'Commit') {
+    # two-phase: first, clean all people's right in OffList
+    # next, add at least rudimentary rights to List.
+    my $right = (
+	($Object == $RT::System)  ? 'ModifySelf' :
+	(ref($Object) =~ /Queue/) ? 'SeeQueue' :
+	'AdminGroup'
+    );
+    foreach my $item (@$OffList) {
+	my $ACLObj = RT::ACL->new($session{'CurrentUser'});
+	$ACLObj->LimitToObject( $Object );
+	$ACLObj->LimitToPrincipal( Id => $item->PrincipalId );
+	foreach my $ace (@{$ACLObj->ItemsArrayRef}) {
+	    $ace->Delete;
+	}
+    }
+    foreach my $item (@$List) {
+	my $ace = RT::ACE->new( $session{CurrentUser} );
+	$ace->Create(
+	    RightName	    => $right,
+	    Object	    => $Object,
+	    PrincipalType   => 'Group',
+	    PrincipalId	    => $item->PrincipalId,
+	);
+    }
+    $m->print("<script>opener.location.reload();window.close();</script>");
+    $m->abort;
+}
+@$OffList = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => $_->Name ] } @$OffList );
+@$List = ( map { $_->[0] } sort { $a->[1] cmp $b->[1] } map { [ $_ => $_->Name ] } grep { $_->Name } @$List );
+$session{GroupRightList} = $List;
+$session{GroupRightOffList} = $OffList;
+</%INIT>
+<%ARGS>
+$Show => ''
+$Queue => 0
+$Group => 0
+$Action => ''
+$Begin => 0
+@On => ()
+@Off => ()
+</%ARGS>

@@ -1,0 +1,38 @@
+%# Today is the tomorrow you worried about yesterday
+<&|$path, %ARGS &>
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Queues' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+		<td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '/Edit/Queues/Basic/' &></td>
+              </tr>
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="0" cellpadding="4">
+                    <tr> 
+                      <td bgcolor="#82D1EC" class="poptable" valign="bottom" > 
+                          <&|/l&>Queue Name</&>: <% $ARGS{QueueObj}->Name %></td>
+                    </tr>
+                    <tr> 
+                      <td bgcolor="#A3DEF1"> 
+                        <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+                          <tr> 
+			    <td><& /Edit/Elements/Tabs, Name => 'Map2', Map => $ARGS{Map2}, URL => $url &></td>
+                          </tr>
+</&>
+<%INIT>
+my $path = $m->request_comp->path;
+$path =~ s/USERRI~1/UserRight/;
+$path =~ s/GROUPR~1/GroupRight/;
+$path =~ s/CUSTOM~1/CustomField/;
+$path =~ s!index~1.htm$!index.html!i;
+$path =~ s!/Queues/([^/]+)/!/Global/$1/! or $m->abort;
+my $url = "../$1/";
+</%INIT>

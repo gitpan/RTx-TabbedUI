@@ -1,0 +1,100 @@
+%# "Laughter is the closest distance between two people."
+%# 		-- Victor Borge
+
+<table width="100%" border="0" cellspacing="4" cellpadding="0" height="206">
+  <tr valign="top"> 
+    <td>
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr> 
+          <td width="70">&nbsp; </td>
+          <td> 
+            <input <% $disabled %> type="radio" name="SetConditionSatisfy" value="any"
+		<% ($Item->ConditionSatisfy eq 'all' or $disabled) ? '' : 'checked' %>>
+            <&|/l&>Any Condition</&>
+            <input <% $disabled %> type="radio" name="SetConditionSatisfy" value="all"
+		<% ($Item->ConditionSatisfy eq 'all') ? 'checked' : '' %>>
+            <&|/l&>All Condition</&></td>
+        </tr>
+      </table>
+	<br />
+    <div style="overflow:auto; height:155; border:0; margin: 0; position: <% $RT::IsMSIE ? 'absolute' : 'relative' %>; width: 100%">
+    <table border="0" cellspacing="0" cellpadding="0" align="center" width="100%">
+
+
+% my $is_eng = (loc('Ticket') eq 'Ticket');
+% foreach my $field (qw(birthday hire_date test_end_date)) {
+          <tr> 
+            <td width="70"><nobr><% $is_eng ? do{ my $x = ucfirst($field); $x =~ s/_(\w)/ \U$1\E/g; $x} : $UserObj->describe($field) %> &nbsp;</nobr></td>
+            <td> 
+              <input <% $disabled %> type="text" name="FieldSet<% $field %>Begin" style="width:42%; cursor:hand" value="<% $F{"${field}Begin"} %>" <& /Work/Elements/Date &>>
+
+              <&|/l&>to</&> 
+              <input <% $disabled %> type="text" name="FieldSet<% $field %>End" style="width:42%; cursor:hand" value="<% $F{"${field}End"} %>" <& /Work/Elements/Date &>>
+          </tr>
+% }
+% foreach my $field (qw(sex nationality cripples_identity work_status type section_id section_type company department level grade responsibility is_card)) {
+          <tr> 
+            <td width="70"><nobr><% eval { $is_eng ? do{ my $x = ucfirst($field); $x =~ s/_(\w)/ \U$1\E/g; $x} : $UserObj->describe($field) } %> &nbsp;</nobr></td>
+            <td> 
+              <select <% $disabled %> name="FieldSet<% $field %>" style="width:90%" value="<% $F{$field} %>">
+                <option></option>
+% my $t = eval { $UserObj->vals($field) };
+% my %seen;
+% foreach my $key (sort { $t->{$a} <=> $t->{$b} or $t->{$a} cmp $t->{$b} } keys %$t) {
+%   next if $seen{ $t->{$key} }++;
+		<option <% ($F{$field} eq $key) ? 'SELECTED' : '' %> value="<% $key %>"><% $t->{$key} %></option>
+% }
+              </select>
+            </td>
+          </tr>
+% }
+          <tr> 
+            <td width="70"><nobr><&|/l&>Code</&></nobr></td>
+	    <td>
+              <select <% $disabled %> name="FieldSetcode" style="width:90%" value="<% $F{code} %>">
+                <option></option>
+%     my $Table = $UserObj->procedures_cname();
+%     foreach my $key (sort { $a <=> $b } keys %$Table) {
+%	    my $selected = 'SELECTED' if $F{code} and $F{code} eq $key;
+	    <option value="<% $key %>" <% $selected %>><% $Table->{$key} %></option>
+%     }
+              </select>
+            </td> 
+          </tr>
+	  <tr>
+	    <td valign="top"><&|/l&>Parameter</&>:</td>
+	    <td>
+		<select <% $disabled %> <% $IsAlias %> name="FieldSetfields" style="width:90%" size=4 multiple>
+% while( my $cf = $CFs->Next() ) {
+%	    my $cf_id = $cf->Id;
+%	    my $selected = 'SELECTED' if $F{fields} and $F{fields} =~ /\b\Q$cf_id\E\b/;
+                <option <% $selected %> value="<% $cf->Id %>"><% $cf->Name %></option>
+% }
+              </select>
+	    </td>
+	  </tr>
+        </table>
+	  </div>
+      </td>
+  </tr>
+</table>
+<%INIT>
+my $UserObj = $session{CurrentUser}->UserObj;
+$Item = $RT::Nothing unless UNIVERSAL::can($Item, 'ConditionSatisfy');
+my $disabled = 'disabled' if $IsAlias or ($Item == $RT::Nothing);
+my %F = split(/,/, $Item->ConditionFields);
+my $CFs;
+if ($QueueObj->Id) {
+    $CFs = $QueueObj->CustomFields;
+}
+else {
+    $CFs = RT::CustomFields->new($session{'CurrentUser'});
+    $CFs->LimitToGlobal();
+}
+</%INIT>
+<%ARGS>
+$List
+$Item
+$QueueObj
+$IsAlias
+</%ARGS>

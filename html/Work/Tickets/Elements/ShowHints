@@ -1,0 +1,13 @@
+%# It shall be unlawful for any suspicious person to be within the
+%# municipality.
+%# 		-- Local ordinance, Euclid Ohio
+% if ($m->notes("InvalidField-" . $CustomField->Id)) {
+<font color="red">*</font>
+% }
+% if (my $hints = $CustomField->Attribute('Hints')) {
+<em><% $Loc ? loc($hints) : $hints %></em>
+% }
+<%ARGS>
+$CustomField => $RT::Nothing
+$Loc => 0
+</%ARGS>

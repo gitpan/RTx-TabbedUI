@@ -1,0 +1,121 @@
+%# A man wrapped up in himself makes a very small package.
+
+<INPUT TYPE=HIDDEN NAME="Bookmark" VALUE="<% $session{'tickets'}->FreezeLimits()|u %>">
+<INPUT TYPE=HIDDEN NAME="CompileRestriction" VALUE=1>
+
+<TABLE width="100%" class="poptable" cellpadding=2 cellspacing=1>
+<tr><td colspan="2" class="tableTitle"><&|/l&>Refine search</&></td></tr>
+<tr><td>
+
+<&|/l&>Owner is</&>  <& /Elements/SelectBoolean, Name => "OwnerOp", 
+					  TrueVal=> '=', 
+					  FalseVal => '!=' 
+&> 
+<& /Elements/SelectOwner, Name => "ValueOfOwner" &>
+</td></tr><tr><td>
+
+<&|/l&>Requestor email address</&> 
+<& /Elements/SelectMatch, Name => "RequestorOp" &>
+<INPUT Name="ValueOfRequestor" SIZE=20>
+</td></tr><tr><td>
+
+<&|/l&>Subject</&> <& /Elements/SelectMatch, Name => "SubjectOp" &> 
+<INPUT Name="ValueOfSubject" SIZE=20>
+</td></tr><tr><td>
+
+<&|/l&>Queue</&>  <& /Elements/SelectBoolean,  Name => "QueueOp" , 
+					True => loc("is"), 
+					False => loc("isn't"), 
+					TrueVal=> '=', 
+					FalseVal => '!=' &>
+<& /Elements/SelectQueue, Name => "ValueOfQueue" &>
+</td></tr><tr><td>
+
+<&|/l&>Priority</&> <& /Elements/SelectEqualityOperator, Name => "PriorityOp" &>
+<INPUT Name="ValueOfPriority" SIZE=5>
+</td></tr><tr><td>
+
+<& /Elements/SelectDateType, Name => 'DateType' &>
+<& /Elements/SelectDateRelation, Name=>"DateOp" &>
+<& /Elements/SelectDate, Name => "ValueOfDate", ShowTime => 0, Default => '' &>
+</td></tr><tr><td>
+
+<&|/l&>Ticket attachment</&> 
+<& /Elements/SelectAttachmentField, Name => 'AttachmentField' &>
+<& /Elements/SelectBoolean, Name => "AttachmentFieldOp", 
+			    True => loc("matches"), 
+			    False => loc("does not match"), 
+			    TrueVal => 'LIKE', 
+			    FalseVal => 'NOT LIKE' 
+&> 
+<Input Name="ValueOfAttachmentField" Size=20>
+</td></tr><tr><td>
+
+<&|/l&>Status</&> 
+<& /Elements/SelectBoolean, Name => "StatusOp", 
+			    True => loc("is"), 
+  			    False => loc("isn't"), 
+			    TrueVal=> '=', 
+			    FalseVal => '!=' 
+&>  
+<& /Elements/SelectStatus, Name => "ValueOfStatus" &>
+
+
+% while ( my $CustomField = $CustomFields->Next ) {
+%     next if $CustomField->Type =~ /^Label/;
+</td></tr><tr><td>
+%   my $descr = $CustomField->Description;
+%   if ($CustomField->Type eq 'FreeformExternal') {
+%       $descr = $session{CurrentUser}->UserObj->describe($descr);
+%   } elsif ($CustomField->Type eq 'SelectExternal') {
+%       $descr = $session{CurrentUser}->UserObj->field_cname($descr);
+%   }
+    <% $descr || $CustomField->Name %>
+        <& /Elements/SelectCustomFieldOperator, Name => "CustomFieldOp". $CustomField->id, 
+                                    True => loc("is"), 
+                                    False => loc("isn't"), 
+                                    TrueVal=> '=', FalseVal => '!=' &>
+
+<& /Elements/SelectCustomFieldValue, Name => "CustomField".$CustomField->id,
+                            CustomField => $CustomField,
+                            &>
+% }
+
+</td></tr></table>
+
+<TABLE width="100%" class="poptable" cellpadding=2 cellspacing=1>
+<tr><td colspan="2" class="tableTitle"><&|/l&>Ordering and sorting</&></td></tr>
+<tr><td>
+
+<&|/l&>Results per page</&> <& /Elements/SelectResultsPerPage, Name => "RowsPerPage", 
+							Default => $session{'tickets_rows_per_page'} || '50'
+&>
+</td></tr><tr><td>
+
+<&|/l&>Sort results by</&> <& /Elements/SelectTicketSortBy, Name => "TicketsSortBy", 
+						     Default => $session{'tickets_sort_by'} 
+&> 
+<& /Elements/SelectSortOrder, Name => 'TicketsSortOrder', Default => $session{'tickets_sort_order'} &>
+</td></tr><tr><td>
+
+<input type="checkbox" name="HideResults" <%$ARGS{'HideResults'} && 'CHECKED'%>> <&|/l&>Don't show search results</&>
+
+</td></tr><tr><td>
+<& /Elements/Refresh, Name => 'RefreshSearchInterval' , Default => $session{'tickets_refresh_interval'} &>
+
+</td></tr>
+</table>
+<input TYPE=SUBMIT NAME="Action" VALUE='<&|/l&>Search</&>'>
+
+<%INIT>
+my $CustomFields = RT::CustomFields->new( $session{'CurrentUser'});
+ foreach ( $session{'tickets'}->RestrictionValues('Queue') ) {
+        # Gotta load up the $queue object, since queues get stored by name now.
+        my $queue = RT::Queue->new($session{'CurrentUser'});
+        $queue->Load($_);
+        $CustomFields->LimitToQueue($queue->Id);
+ }
+
+ $CustomFields->LimitToGlobal();
+
+</%INIT>

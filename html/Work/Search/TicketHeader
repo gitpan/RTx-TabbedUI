@@ -1,0 +1,19 @@
+%# Rocky's Lemma of Innovation Prevention
+%# 	Unless the results are known in advance, funding agencies will
+%# 	reject the proposal.
+<TR>
+<& TicketHeaderCell , Attribute => 'id', Header => '#', RowSpan => 2 &>
+<& TicketHeaderCell , Attribute => 'Subject'&>
+<& TicketHeaderCell , Attribute => 'Status'&>
+<& TicketHeaderCell , Attribute => 'Queue'&>
+<& TicketHeaderCell , Attribute => 'Owner'&>
+<& TicketHeaderCell , Attribute => 'Priority'&>
+</TR>
+<TR>
+<& TicketHeaderCell , Attribute => 'Requestor(s)'&>
+<& TicketHeaderCell , Attribute => 'Created'&>
+<& TicketHeaderCell , Attribute => 'Told', Header => 'Last Contact'&>
+<& TicketHeaderCell , Attribute => 'LastUpdated', Header => 'Last Updated'&>
+<& TicketHeaderCell , Attribute => 'TimeLeft', Header => 'Left'&>
+</TR>
+%# loc('Last Notified');

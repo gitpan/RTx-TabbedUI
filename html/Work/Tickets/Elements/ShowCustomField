@@ -1,0 +1,38 @@
+%# "Those who do not do politics will be done in by politics."
+%# 		-- French Proverb
+<PRE><% $out %>&nbsp;</PRE>
+<%INIT>
+return unless $TicketObj;
+my $out = '';
+my $Values = $TicketObj->CustomFieldValues($CustomField->id);
+
+if ($CustomField->Type =~ /^Freeform/ or $CustomField->Type eq 'SelectVersion') {
+    while (my $Value = $Values->Next()) {
+	$out .= $Value->Content . "\n";
+    }
+}
+elsif ($CustomField->Type =~ /^Select(?:Single|Multiple|Resolution)$/) {
+    my $CustomFieldValues = $CustomField->Values();
+    while (my $value = $CustomFieldValues->Next) {
+	next unless $Values->HasEntry($value->Name);
+	$out .= ($Loc ? loc($value->Description) : $value->Description) . "\n";
+    }
+}
+elsif ($CustomField->Type eq 'SelectExternal') {
+    my $UserObj = $session{CurrentUser}->UserObj;
+    my @SubHash = $UserObj->field_values($CustomField->Description);
+    while (my ($v, $descr) = splice(@SubHash, 0, 2)) {
+	next unless $Values->HasEntry($v);
+	$out .= "$descr\n";
+    }
+}
+
+chomp $out;
+
+</%INIT>
+<%ARGS>
+$TicketObj => undef
+$CustomField => undef
+$NamePrefix => undef
+$Loc => undef
+</%ARGS>

@@ -1,0 +1,23 @@
+%# A vacuum is a hell of a lot better than some of the stuff that nature
+%# replaces it with.
+%# 		-- Tennessee Williams
+<& /Edit/Elements/List,
+    Data  => [
+	[ '30%', loc('Group Name'),	    sub { loc($_[0]->Type) || $_[0]->Name } ],
+	[ '40%', loc('Group Description'),  sub {
+	    int($_[0]->Description) ? loc('HRMSDefined') : loc($_[0]->Domain)
+	} ],
+	[ '30%', loc('Group Status'),	    sub {
+	    ($_[0] == $RT::Nothing) ? '' : $_[0]->Disabled ? loc('Disabled') : loc('Open')
+	} ],
+    ],
+    Link    => sub {
+	"index.html?Queue=$ARGS->{Queue}&Begin=$Begin&Show=$ARGS->{Show}&Group=" . $_[0]->Id
+    },
+    Size    => 16,
+    %ARGS,
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

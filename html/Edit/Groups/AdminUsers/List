@@ -1,0 +1,2 @@
+%# An elephant is a mouse with an operating system.
+<& /Edit/Global/UserRight/List, Style => "OVERFLOW: auto; HEIGHT:195;WIDTH:335", Width => '1000', Size => 6, Label => 'Admin Rights', %ARGS &>

@@ -1,0 +1,91 @@
+%# One nice thing about egotists: they don't talk about other people.
+
+<& /Edit/Elements/104Header,
+    Focus => 'NewCategory',
+    Buttons => [
+	Add => "index.html?Action-Add=1",
+	Save => "javascript:document.getElementById('mainform').submit()",
+	Delete => 1,
+	Copy => '',
+	Search => '',
+    ],
+    Method => 'POST',
+&>
+
+<input type="hidden" name="Category" value="<% $Category %>">
+<table width="97%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><& /Edit/Elements/Tab, Text => 'Queues' &></td>
+  </tr>
+  <tr> 
+    <td valign="top"> 
+      <table border="0" cellspacing="0" cellpadding="4" class="poptable" width="100%">
+        <tr> 
+          <td valign="top"> 
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+              <tr> 
+		<td><& /Edit/Elements/Tabs, Map => $ARGS{Map}, URL => '/Edit/Queues/Category/', Skip => '/Edit/Queues/Basic/' &></td>
+              </tr>
+              <tr> 
+                <td class="tableEmboss">
+                  <table width="100%" border="0" cellspacing="3" cellpadding="0">
+                    <tr> 
+                      <td><& Top, Item => $Category &></td>
+                    </tr>
+                    <tr> 
+                      <td>
+			<& List, Delete => 1, Item => $Category, List => $List, Categories => \%Categories, Begin => $Begin, ARGS => \%ARGS &>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $Queues = RT::Queues->new($session{'CurrentUser'});
+$Queues->UnLimit;
+
+my %Categories = map { $_ => 0 } @{ $Queues->Categories };
+$Categories{$_} = 0 for split(/\n/, $RT::SystemUser->Attribute('Categories'));
+
+if ($Action eq 'Delete') {
+    delete $Categories{$_} for @ListDelete;
+    $Category = $NewCategory = '';
+    $Begin = 0;
+}
+
+while (my $queue = $Queues->Next) {
+    my $descr = $queue->Description;
+    if ($Action eq 'Save' and length($NewCategory) and $descr eq $Category) {
+	$queue->SetDescription($NewCategory);
+	$descr = $NewCategory;
+    }
+    $Categories{$descr}++ if length $descr;
+}
+
+if ($Action eq 'Add') {
+    $Category = '';
+    $Begin = 0; 
+}
+
+if (length $NewCategory) {
+    delete $Categories{$Category} if length($Category);
+    $Categories{$Category = $NewCategory} = 0;
+}
+
+my $List = [ sort keys %Categories ];
+$Queues->SetCategories( $List );
+</%INIT>
+<%ARGS>
+$Category	=> ''
+$NewCategory	=> ''
+$Begin		=> 0
+$Action		=> ''
+@ListDelete	=> ()
+</%ARGS>

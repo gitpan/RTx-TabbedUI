@@ -1,0 +1,47 @@
+%# To be sure of hitting the target, shoot first and, whatever you hit,
+%# call it the target.
+
+% unless ($RT::OIN104 or $Recurse) {
+<table cellpadding=0 cellspacing=0 border=0><tr><td>
+<& /Work/Elements/Tab, Text => $Text, Recurse => 1 &>
+</td></tr><tr><td>
+% }
+% if ($RT::OIN104) {
+<table border=0 cellpadding=0 cellspacing=0>
+% } else {
+<table border=0 cellpadding=0 cellspacing=0 width="100%">
+% }
+  <tr> 
+% while (my ($k, $v) = splice(@AdminTabs, 0, 2)) {
+%   if ($k eq $Text or (($Text =~ s/s$//), $k eq "$Text Setup")) {
+    <td background="/img/tabLeft.png" width=2><noscript>{</noscript></td>
+    <td align="center" background="/img/tabMiddle.png"><div style="<% $OIN::OIN104 ? '' : 'padding: 3px;' %> padding-left: 10px; padding-right: 10px;position:relative;top:2px;color:white"><label><% loc($k) %></label></div></td>
+    <td background="/img/tabRight.png" width=2><noscript>}</noscript></td>
+%   } elsif (!$RT::OIN104) {
+    <td background="/img/tabLeftTop.png" width=2><noscript>{</noscript></td>
+    <td align="center" style="cursor: hand" onclick="javascript:location.href='<% $v %>'" background="/img/tabMiddleTop.png"><a style="color: black" href="<% $v %>"><div style="padding: 3px; padding-left: 10px; padding-right: 10px;position:relative;top:2px;color:black"><% loc($k) %></div></a></td>
+    <td background="/img/tabRightTop.png" width=2><noscript>}</noscript></td>
+%   }
+% }
+  </tr>
+</table>
+% return if $RT::OIN104 or $Recurse;
+</td></tr></table>
+
+<a id="skipnav" name="skipnav"></a>
+<%INIT>
+my @AdminTabs = (
+'User Setup'		# loc
+    => '/Edit/Users/',
+'Group Setup'		# loc
+    => '/Edit/Groups/',
+'Queue Setup'		# loc
+    => "/Edit/Queues/",
+'Global Setup'		# loc
+    => "/Edit/Global/Basic/",
+);
+</%INIT>
+<%ARGS>
+$Text
+$Recurse => 0
+</%ARGS>

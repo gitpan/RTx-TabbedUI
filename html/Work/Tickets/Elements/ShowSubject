@@ -1,0 +1,17 @@
+%# A budget is just a method of worrying before you spend money, as well
+%# as afterward.
+
+<tr><td valign="top"><p><img src="/img/3Dtoolbar.png" width="3" height="18" align="absmiddle"> 
+% if (defined($Description)) {
+<% $Loc ? loc($Description) : $Description %>
+% } else {
+<&|/l&>Subject</&>
+% }
+</p></td><td valign="top"><img src="/img/arrow_DarkBlue.png" width="5" height="9" align="absmiddle"></td><td>
+<% $Ticket->Subject %>
+</td></tr>
+<%ARGS>
+$Ticket
+$Description => undef
+$Loc => 0
+</%ARGS>

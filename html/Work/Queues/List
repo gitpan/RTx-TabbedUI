@@ -1,0 +1,21 @@
+%# Don't let your mind wander -- it's too little to be let out alone.
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '32%', loc('Queue Name'),	    sub { $_[0]->Name } ],
+	[ '30%', loc('Ticket Type'),	    sub { $_[0]->Description } ],
+	[ '10%', loc('Queue Owner'),	    sub { $_[0]->AdminCc->UserMembersObj->First->Name }, "align='center'" ],
+	[ '15%', loc("Owner's Phone"),	    sub { $_[0]->AdminCc->UserMembersObj->First->WorkPhone } ],
+	[ '13%', loc("Ticket Due"), sub {
+	    ($_[0] == $RT::Nothing) ? '' :
+		($_[0]->DefaultDueIn =~ /([1-9]\d*)/) ? "$1 ".loc('days') : loc('none');
+	}, "align='right'" ],
+    ],
+    Link    => sub { "/Work/Requests/Create.html?Queue=" . $_[0]->Id },
+    Size    => 16,
+    Style   => (($RT::OIN104 ? 'height: 385px; ' : '') . 'width: 100%'),
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

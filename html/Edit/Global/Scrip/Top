@@ -1,0 +1,101 @@
+%# Reisner's Rule of Conceptual Inertia:
+%# 	If you think big enough, you'll never have to do it.
+
+<table width="100%" border="0" cellspacing="5" cellpadding="0">
+  <tr>
+    <td height=266>
+      <table border="0" cellpadding="0" align="center" cellspacing="1" width="98%" class="fixed"><COL width=85px><COL width=75px>
+        <tr> 
+          <td width="85"><nobr><&|/l&>Scrip Name</&>&nbsp;</nobr></td>
+          <td colspan="2"> 
+            <input <% $disabled %> type="text" name="Description" value="<% $Item->Description %>" style="width:100%">
+          </td>
+        </tr>
+        <tr> 
+          <td width="85"><nobr><&|/l&>Scrip Condition</&>&nbsp;</nobr></td>
+          <td width="75"><nobr>
+            <input <% $disabled %> type="radio" name="UserScripCondition" value="0" <% $my{UserScripCondition} ? '' : 'checked' %>>
+            <&|/l&>System Defined</&> </nobr></td>
+          <td> 
+            <select <% $disabled %> name="ScripCondition" style="width:100%">
+%while (my $ScripCondition = $ScripConditions->Next) {
+% $my{IdScripCondition} = $ScripCondition->Id if $ScripCondition->ExecModule eq 'UserDefined';
+		<OPTION VALUE=<%$ScripCondition->Id%>
+<% $ScripCondition->Id == $my{ScripCondition} ? 'SELECTED' : '' %>
+		><% loc($ScripCondition->Name) %>
+		</OPTION>
+%}
+	    </SELECT>
+          </td>
+        </tr>
+        <tr> 
+          <td width="85">&nbsp;</td>
+          <td width="75" valign="top"><nobr>
+            <input <% $disabled %> type="radio" name="UserScripCondition" value="<% $my{IdScripCondition} %>" <% $my{UserScripCondition} ? 'checked' : '' %>>
+            <&|/l&>Custom condition</&>&nbsp;</nobr></td>
+          <td> 
+            <textarea <% $disabled %> name="CustomIsApplicableCode" style="width:100%;height:40" rows="2"><%$Item->CustomIsApplicableCode%></textarea>
+          </td>
+        </tr>
+        <tr> 
+          <td width="85"><nobr><&|/l&>Scrip Action</&> </nobr></td>
+          <td valign="top" width="75"><nobr>
+            <input <% $disabled %> type="radio" name="UserScripAction" value="0" <% $my{UserScripAction} ? '' : 'checked' %>>
+            <&|/l&>System Defined</&>&nbsp;</nobr></td>
+          <td valign="top"> 
+            <select <% $disabled %> name="ScripAction" style="width:100%">
+%while (my $ScripAction = $ScripActions->Next) {
+% $my{IdScripAction} = $ScripAction->Id if $ScripAction->ExecModule eq 'UserDefined';
+		<OPTION VALUE=<%$ScripAction->Id%>
+<% $ScripAction->Id == $my{ScripAction} ? 'SELECTED' : '' %>
+		><% loc($ScripAction->Name) %>
+		</OPTION>
+%}
+	    </SELECT>
+          </td>
+        </tr>
+        <tr> 
+          <td height="60" width="85">&nbsp;</td>
+          <td height="60" valign="top" width="75"><nobr>
+            <input <% $disabled %> type="radio" name="UserScripAction" value="<% $my{IdScripAction} %>" <% $my{UserScripAction} ? 'checked' : '' %>>
+            <&|/l&>Custom condition</&>&nbsp;</nobr></td>
+          <td height="60"> <&|/l&>Custom action preparation code</&><br>
+            <textarea <% $disabled %> name="CustomPrepareCode" style="width:100%;height:40" rows="2"><%$Item->CustomPrepareCode%></textarea>
+          </td>
+        </tr>
+        <tr> 
+          <td width="85">&nbsp;</td>
+          <td valign="top" width="75">&nbsp;</td>
+          <td><&|/l&>Custom action cleanup code</&><br>
+            <textarea <% $disabled %> name="CustomCommitCode" style="width:100%;height:40" rows="2"><%$Item->CustomCommitCode%></textarea>
+          </td>
+        </tr>
+        <tr> 
+          <td width="85"><&|/l&>Apply Template</&></td>
+          <td valign="top" colspan="2">
+	    <& /Edit/Elements/SelectTemplate, Name => "Template", Default => $my{Template}, Queue => $Queue, disabled => $disabled &>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+my $ScripConditions = RT::ScripConditions->new($session{'CurrentUser'});
+$ScripConditions->UnLimit;
+my $ScripActions = RT::ScripActions->new($session{'CurrentUser'});
+$ScripActions->UnLimit;
+my %my;	# my, my!
+foreach my $key (qw(ScripCondition ScripAction Template)) {
+    my $method = "${key}Obj";
+    next unless $Item->$method;
+    $my{$key} = $Item->$method->Id;
+    next if $key eq 'Template';
+    $my{"User$key"} = ( $Item->$method->ExecModule eq 'UserDefined' ) ? 1 : 0;
+}
+my $disabled = (($Item == $RT::Nothing) ? 'disabled' : '');
+</%INIT>
+<%ARGS>
+$Item => $RT::Nothing
+$Queue => 0
+</%ARGS>

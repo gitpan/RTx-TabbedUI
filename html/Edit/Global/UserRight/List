@@ -1,0 +1,25 @@
+%# Very few profundities can be expressed in less than 80 characters.
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="tableEmboss" style="table-layout:fixed">
+<TR><TD>
+<& /Edit/Elements/List,
+    Data  => [
+      ($RT::OIN104 ?
+	[ '80px', loc('User Number'),	    sub { $_[0]->get('no') } ] : ()),
+	[ '80px', loc('Chinese Name'),       sub { $_[0]->Name } ],
+	[ '120px',    ('First Name'),	    sub { $_[0]->get('firstname') } ],
+	[ '120px',    ('Last Name'),	    sub { $_[0]->get('lastname') } ],
+	[ '165px', loc('Department Name'),    sub { $_[0]->get('department') } ],
+	[ '90px', loc('Department ID'),      sub { $_[0]->val('department') } ],
+	[ '145px', loc('Position Name'),      sub { $_[0]->get('job') } ],
+	[ '90px', loc('Position Number'),    sub { $_[0]->val('job') } ],
+    ],
+    Link    => sub { "index.html?Queue=$ARGS->{Queue}&Begin=$Begin&Show=$ARGS->{Show}&Group=$ARGS->{Group}&$ARGS{Prefix}User=" . $_[0]->Id },
+    Size    => 11,
+    Style   => "OVERFLOW: auto; WIDTH:100%; HEIGHT: 324px",
+    %ARGS,
+&>
+</TD></TR></TABLE>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

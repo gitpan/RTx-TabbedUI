@@ -1,0 +1,90 @@
+%# With a gentleman I try to be a gentleman and a half, and with a fraud I
+%# try to be a fraud and a half.
+%#		-- Otto von Bismarck
+
+<TABLE BORDER=0 WIDTH=630 cellpadding=1 cellspacing=1>
+%# THEAD
+<TR>
+<THEAD>
+% foreach my $cf (@CustomFields) {
+%     my $descr = eval { $session{CurrentUser}->UserObj->field_cname($cf->Description) }
+%         if $cf->Type eq 'EntryExternal';
+<TH class="tableTitle" height="20" ALIGN=LEFT><% $descr || $cf->Description || $cf->Name %></TH>
+% }
+% if (!$ReadOnly) {
+<TH height="20" width=100 ALIGN=LEFT>
+&nbsp;
+</TH>
+% }
+</THEAD>
+</TR>
+
+%# current values
+% foreach my $row (0 .. $LastIndex) {
+<TR>
+%     foreach my $col (0 .. $#Current) {
+%         my $cf = $CustomFields[$col];
+%	  my $name = ('Entry-' . $cf->Id);
+%         $name .= "-$row" if $cf->Type eq 'EntryBoolean';
+<& EditCustomFieldEntry,
+    cf => $cf,
+    Name => $name,
+    ReadOnly => $ReadOnly,
+    Value => $Current[$col][$row],
+    TicketObj => $TicketObj, 
+    &>
+%     }
+%     if (!$ReadOnly) {
+<TD ALIGN=LEFT><INPUT TYPE="CHECKBOX" NAME="DeleteEntry-<%$row%>" VALUE="1">
+<&|/l&>(delete)</&>
+</TD>
+%     }
+</TR>
+% }
+
+%# final row
+%if (!$ReadOnly) {
+<TR>
+% my $IDs = "";
+% foreach my $cf (@CustomFields) {
+%     $IDs .= "-" . $cf->Id;
+<& EditCustomFieldEntry,
+    cf => $cf,
+    Name => ($Prefix . $cf->Id . $Postfix),
+    TicketObj => $TicketObj,
+    &>
+% }
+<TD ALIGN=LEFT><INPUT STYLE="width: 100%" TYPE="SUBMIT" NAME="AddMoreEntry<% $IDs %>" VALUE="<&|/l&>Update</&>"></TD>
+</TR>
+%}
+</TBODY></TABLE>
+<BR>
+
+<%INIT>
+my @Current;
+my $LastIndex = -1;
+my $UserObj;
+foreach my $cf (@CustomFields) {
+    my $values;
+    if ($TicketObj) {
+	$values = [ map {
+	    $_->Content
+	} @{$TicketObj->CustomFieldValues($cf->Id)->ItemsArrayRef} ];
+    }
+    elsif (exists $TempValues->{$cf->Id}) {
+	$values = $TempValues->{$cf->Id};
+    }
+
+    push @Current, $values;
+    $LastIndex = $#{$values} if $#{$values} > $LastIndex;
+}
+
+</%INIT>
+<%ARGS>
+$Prefix => ''
+$Postfix => ''
+$ReadOnly => undef
+$TicketObj => undef
+@CustomFields => ()
+$TempValues => undef
+</%ARGS>

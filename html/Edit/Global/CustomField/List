@@ -1,0 +1,23 @@
+%# Feel disillusioned?  I've got some great new illusions ...
+<& /Edit/Elements/List,
+    %ARGS,
+    Data  => [
+	[ '20%', loc('Field Type'),    sub { loc($_[0]->Type) } ,'align=center'],
+	[ '45%', loc('Field Name'),	    sub { loc($_[0]->Name) } ],
+	[ '35%', loc('Field Description'),  sub {
+	($_[0]->Type eq 'FreeformExternal')
+	    ? '(' . eval {
+		$session{CurrentUser}->UserObj->describe($_[0]->Description);
+	    } . ')' :
+	($_[0]->Type =~ /(?:Entry|Select)External/)
+	    ? eval { '(' . $session{CurrentUser}->UserObj->field_cname($_[0]->Description) . ')' }
+	    : $_[0]->Description
+	} ],
+    ],
+    Link    => sub { "index.html?Queue=$ARGS->{Queue}&Begin=$Begin&CF=" . $_[0]->Id },
+    Size    => 12,
+&>
+<%ARGS>
+$Begin	=> 0
+$ARGS	=> {}
+</%ARGS>

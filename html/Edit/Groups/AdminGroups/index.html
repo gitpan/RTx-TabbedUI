@@ -1,0 +1,67 @@
+%# Sex is the mathematics urge sublimated.
+%# 		-- M. C. Reed.
+
+</form><form action="index.html" method="POST" style="margin: 0px; padding: 0px">
+<input type="hidden" name="Begin" value="<% $Begin %>">
+<input type="hidden" name="Show" value="<% $Show %>">
+<input type="hidden" name="Group" value="<% $Group %>">
+<input type="hidden" name="AdminGroup" value="<% $AdminGroup %>">
+<input type="hidden" name="BeginGroup" value="<% $BeginGroup %>">
+
+<table width="100%" border="0" cellspacing="4" cellpadding="0">
+    <tr><td>
+	<& /Edit/Elements/Button, Name => "Action-AddAdminGroup", Image => "funcAdd", Text => "Add", Disabled => (!$Group), Javascript => $m->scomp('/Edit/Elements/NewWindow', "/Edit/Groups/AdminGroups/Add.html?Show=$Show&Group=$Group&Begin=$Begin", 600, 365) &>
+	<& /Edit/Elements/Button, Name => "Action-DeleteAdminGroup", Image => "funcDelete", Text => "Delete", Disabled => (!$Group or $Item == $RT::Nothing) &>
+    </td></tr>
+    <tr><td><& List, Prefix => 'Admin', List => $List, Begin => $Begin, Item => $Item, ARGS => \%ARGS &></td></tr>
+</table>
+<%INIT>
+# figure out all groups with perms toward $Item
+my $List = [];
+my $OffList = [];
+
+if ($Object != $RT::Nothing) {
+
+my $Groups = RT::Groups->new($session{'CurrentUser'});
+$Groups->LimitToUserDefinedGroups;
+while (my $GroupObj = $Groups->Next) {
+    my $ACLObj = RT::ACL->new($session{'CurrentUser'});
+    $ACLObj->LimitToObject( $Object );
+    $ACLObj->LimitToPrincipal( Id => $GroupObj->PrincipalId );
+
+    if ($Action eq 'DeleteAdminGroup' and $AdminGroup eq $GroupObj->Id) {
+	foreach my $ace (@{$ACLObj->ItemsArrayRef}) {
+	    $ace->Delete;
+	}
+	push @$OffList, $GroupObj;
+	$Group = 0;
+    }
+    elsif ($ACLObj->Count) {
+	push @$List, $GroupObj;
+    }
+    else {
+	push @$OffList, $GroupObj;
+    }
+}
+
+}
+
+my $Item = $RT::Nothing;
+if ($AdminGroup) {
+    $Item = RT::Group->new($session{'CurrentUser'});
+    $Item->Load( $AdminGroup );
+}
+
+$session{GroupRightList} = $List;
+$session{GroupRightOffList} = $OffList;
+
+</%INIT>
+<%ARGS>
+$AdminGroup => 0
+$BeginGroup => 0
+$Begin => 0
+$Group => 0
+$Show => 0
+$Action => ''
+$Object => $RT::Nothing
+</%ARGS>

@@ -1,0 +1,139 @@
+%# While your friend holds you affectionately by both your hands you are
+%# safe, for you can watch both of his.
+%# 		-- Ambrose Bierce, "The Devil's Dictionary"
+
+<tr> 
+  <td height="20" colspan="2" style="padding-top: 0">
+<table width="100%" border="0" cellspacing="1" cellpadding="2" class="tableemboss">
+  <TR>
+    <TD VALIGN=TOP WIDTH=50% class="tableTitle">
+      <&|/l&>Current Relationships</&>
+    </TD><TD VALIGN=TOP WIDTH=50% class="tableTitle">
+      <&|/l&>New Relationships</&>
+    </TD>
+  </TR>
+  <TR>
+    <TD VALIGN=TOP WIDTH=50% bgcolor="white" class="poptable">
+<table>
+  <tr>
+    <td></td>
+    <td><i><&|/l&>(Check box to delete)</&></i></td>
+  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>Depends on</&>:</td>
+    <td class="poptable">
+% while (my $link = $Ticket->DependsOn->Next) {
+% my $member = $link->TargetObj;
+      <INPUT TYPE=CHECKBOX NAME="DeleteLink--<%$link->Type%>-<%$link->Target%>">
+      <a href="Display.html?id=<%$member->Id%>"><%$member->Id%></a>: (<%$member->OwnerObj->Name%>) <%$member->Subject%>
+      [<%loc($member->Status)%>]<br>
+% }
+    </td>
+  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>Depended on by</&>:</td>
+    <td class="value">
+% while (my $link = $Ticket->DependedOnBy->Next) {
+% my $member = $link->BaseObj;
+      <INPUT TYPE=CHECKBOX NAME="DeleteLink-<%$link->Base%>-<%$link->Type%>-">
+      <a href="Display.html?id=<%$member->Id%>"><%$member->Id%></a>: (<%$member->OwnerObj->Name%>) <%$member->Subject%> 
+      [<%loc($member->Status)%>]<br>
+% }
+    </td>
+  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>Parents</&>:</td>
+    <td class="value">
+% while (my $link = $Ticket->MemberOf->Next) {
+% my $member = $link->TargetObj;
+      <INPUT TYPE=CHECKBOX NAME="DeleteLink--<%$link->Type%>-<%$link->Target%>">
+      <a href="Display.html?id=<%$member->Id%>"><%$member->Id%></a>: (<%$member->OwnerObj->Name%>) <%$member->Subject%>
+      [<%loc($member->Status)%>]<br>
+% }
+    </td>
+  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>Children</&>:</td>
+    <td class="value">
+% while (my $link = $Ticket->Members->Next) {
+      <INPUT TYPE=CHECKBOX NAME="DeleteLink-<%$link->Base%>-<%$link->Type%>-">
+% my $member = $link->BaseObj;
+      <a href="Display.html?id=<%$member->Id%>"><%$member->Id%></a>: (<%$member->OwnerObj->Name%>) <%$member->Subject%> 
+      [<%loc($member->Status)%>]<br>
+% }
+    </td>
+  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>Refers to</&>:</td>
+    <td class="value">
+% while (my $link = $Ticket->RefersTo->Next) {
+      <INPUT TYPE=CHECKBOX NAME="DeleteLink--<%$link->Type%>-<%$link->Target%>">
+% if ($link->TargetURI->IsLocal) {
+% my $member = $link->TargetObj;
+      <a href="Display.html?id=<%$member->Id%>"><%$member->Id%></a>: (<%$member->OwnerObj->Name%>) <%$member->Subject%> [<%loc($member->Status)%>]<br>
+% } else {
+      <A HREF="<%$link->TargetURI->Resolver->HREF%>"><%$link->TargetURI->Resolver->AsString%></A><br>
+% }
+%}
+    </td>
+  </tr>
+  <tr>
+    <td class="labeltop"><&|/l&>Referred to by</&>:</td>
+    <td class="value">
+% while (my $link = $Ticket->ReferredToBy->Next) {
+      <INPUT TYPE=CHECKBOX NAME="DeleteLink-<%$link->Base%>-<%$link->Type%>-">
+% if ($link->BaseURI->IsLocal) {
+% my $member = $link->BaseObj;
+      <a href="Display.html?id=<%$member->Id%>"><%$member->Id%></a>: (<%$member->OwnerObj->Name%>) <%$member->Subject%> [<%loc($member->Status)%>]<br>
+% } else {
+      <A HREF="<%$link->BaseURI->Resolver->HREF%>"><%$link->BaseURI->Resolver->AsString%></A><br>
+%}
+% }
+    </td>
+  </tr>
+</table>
+			    
+</TD>
+    <TD VALIGN=TOP WIDTH=50% bgcolor="white" class="poptable">
+<i><&|/l&>Enter tickets or URIs to link tickets to. Seperate multiple entries with spaces.</&></i><br>
+<TABLE>
+  <TR>
+    <TD class="label"><&|/l&>Merge into</&>:</TD>
+    <TD class="entry"><input name="<%$Ticket->Id%>-MergeInto"> <i><&|/l&>(only one ticket)</&></i></TD>
+  </TR>
+  <TR>
+    <TD class="label"><&|/l&>Depends on</&>:</TD>
+    <TD class="entry"><input name="<%$Ticket->Id%>-DependsOn"></TD>
+  </TR>
+  <TR>
+    <TD class="label"><&|/l&>Depended on by</&>:</TD>
+    <TD class="entry"><input name="DependsOn-<%$Ticket->Id%>"></TD>
+  </TR>
+  <TR>
+    <TD class="label"><&|/l&>Parents</&>:</TD>
+    <TD class="entry"><input name="<%$Ticket->Id%>-MemberOf"></TD>
+  </TR>
+  <TR>
+    <TD class="label"><&|/l&>Children</&>:</TD>
+    <TD class="entry"> <input name="MemberOf-<%$Ticket->Id%>"></TD>
+  </TR>
+  <TR>
+    <TD class="label"><&|/l&>Refers to</&>:</TD>
+    <TD class="entry"><input name="<%$Ticket->Id%>-RefersTo"></TD>
+  </TR>
+  <TR>
+    <TD class="label"><&|/l&>Referred to by</&>:</TD>
+    <TD class="entry"><input name="RefersTo-<%$Ticket->Id%>"></TD>
+  </TR>
+</TABLE>
+</TD>
+</TR>
+<TR>
+<TD colspan="2" class="tableTitle">
+    <input type="submit" name="Action-Links" value="<&|/l&>Save</&>">
+</TD>
+</TR>
+
+<%ARGS>
+$Ticket => undef
+</%ARGS>

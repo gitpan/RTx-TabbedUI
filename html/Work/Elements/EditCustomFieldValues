@@ -1,0 +1,71 @@
+%# Stop searching.  Happiness is right next to you.  Now, if they'd only
+%# take a bath ...
+% if ($CustomField->Type eq 'FreeformSingle') {
+<input style="width: 150px" name="<%$Name%>"
+% if ($Values)  {
+value="<%$Values->First->Content%>"
+>
+% } elsif ($CustomField->Type eq 'FreeformDate') {
+<input style="width: 150px; cursor: hand" name="<%$Name%>" <& /Work/Elements/Date &>
+% if ($Values)  {
+value="<%$Values->First->Content%>"
+% }       
+>
+% } elsif ($CustomField->Type eq 'FreeformTime') {
+<input style="width: 150px" name="<%$Name%>" <& /Work/Elements/Time &>
+% if ($Values)  {
+value="<%$Values->First->Content%>"
+% }       
+>
+% } elsif ($CustomField->Type eq 'FreeformNumber') {
+<input style="width: 150px" name="<%$Name%>" <& /Work/Elements/Number &>
+% if ($Values)  {
+value="<%$Values->First->Content%>"
+% }       
+>
+% } elsif ($CustomField->Type eq 'FreeformPassword') {
+<input style="width: 150px" name="<%$Name%>" type="password"
+% if ($Values)  {
+value="<%$Values->First->Content%>"
+% }       
+>
+% } elsif ($CustomField->Type eq 'FreeformMultiple') {
+<textarea style="width: 150px" name="<%$Name%>">
+% if ($Values) {
+%while (my $value = $Values->Next ) {
+<%$value->Content%>
+%}
+% }
+</textarea>
+% } elsif ($CustomField->Type =~ /^Select/) {
+<select style="width: 150px" name="<%$Name%>"
+        <%$CustomField->Type eq 'SelectMultiple' && 'MULTIPLE'%>
+        >
+% my $CustomFieldValues = $CustomField->Values();
+% while (my $value = $CustomFieldValues->Next) {
+<option value="<%$value->Name%>" 
+        <% $Values && $Values->HasEntry($value->Name) && 'SELECTED' %>
+        ><% $value->Name%></option>
+% }
+<option value="" <%(!$Values || $Values->Count == 0) && 'SELECTED' %>><&|/l&>(no value)</&></option>
+</select>
+% }
+<%INIT>
+my $Values;
+
+my $CustomFieldValues = $CustomField->Values;
+
+if ($TicketObj ){
+ $Values = $TicketObj->CustomFieldValues($CustomField->id);
+}
+
+
+unless ($Name) {
+     $Name="Ticket-".$TicketObj->Id."-CustomField-".$CustomField->Id."-Values";
+}
+</%INIT>
+<%ARGS>
+$Name => undef
+$CustomField => undef
+$TicketObj => undef
+</%ARGS>

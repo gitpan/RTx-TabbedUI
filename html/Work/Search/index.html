@@ -1,0 +1,97 @@
+%# Every nonzero finite dimensional inner product space has an orthonormal basis.
+%# It makes sense, when you don't think about it.
+
+% if (!$NoUI) {
+<& /Work/Elements/104Header, Title => 'Search', Refresh => $session{'tickets_refresh_interval'} &>
+% }
+
+%if ($ticketcount && !  $ARGS{'HideResults'}) {
+<TABLE WIDTH=100% border=0 cellpadding=2 CELLSPACING=1 class="tableEmboss">
+<& TicketHeader, %ARGS &>
+% my $i;
+%while (my $Ticket = $session{'tickets'}->Next) {
+% $i++;
+<& $TicketRow, Ticket => $Ticket, i=> $i, %ARGS &>
+%}
+<tr bgcolor="#e9e9e9"><td colspan=6 align="center">
+<a href="index.html?GotoPage=1"><&|/l&>First page</&></a>
+&nbsp;&nbsp;
+%  if ( $session{'tickets'}->FirstRow >= $session{'tickets_rows_per_page'}-1 ) {
+<a href="index.html?GotoPage=Prev">&lt;<&|/l&>Previous page</&></a>
+&nbsp;&nbsp;
+%  }                                                                           
+%  if ( $session{'tickets'}->FirstRow + $session{'tickets_rows_per_page'} < $ticketcount ) {
+<a href="index.html?GotoPage=Next"><&|/l&>Next page</&>&gt;</a>
+%  }
+</td></tr>
+<tr><td colspan=2>
+(<&|/l, ($session{'tickets'}->FirstRow+1), ($session{'tickets'}->FirstRow() + $session{'tickets'}->RowsPerPage()  ) &>[_1] - [_2] shown</&>)
+</td><td colspan=2 align="center">
+<% $title %>
+</td><td colspan=2 align="right">
+<a href="Bulk.html"><&|/l&>Update all these tickets at once</&></a>
+</td></tr>
+</table>
+
+% }
+<TABLE WIDTH="100%">
+<COL WIDTH="30%"><COL WIDTH="70%">
+<TR>
+<TD VALIGN="TOP">
+<TABLE width="100%" class="poptable" cellpadding=2 cellspacing=1>
+<tr><td colspan="2" class="tableTitle"><&|/l&>Current search criteria</&></td></tr>
+
+%my %restrictions=$session{'tickets'}->DescribeRestrictions();
+%foreach my $row (keys %restrictions){
+<tr bgcolor="white">
+<td><%$restrictions{"$row"}%></td>
+<td width="20"><A HREF="index.html?DeleteRestriction=<%$row%>"><img src="/img/funcDelete.png" width="20" height="20" alt="<&|/l&>Delete</&>" title="<&|/l&>Delete</&>" border=0></a></td>
+</tr>
+%}
+</td></tr></table>
+% if (%restrictions) {
+<A HREF="index.html?Bookmark=<%$session{'tickets'}->FreezeLimits()|u%>&TicketsSortBy=<%$session{'tickets_sort_by'}%>&TicketsSortOrder=<%$session{'tickets_sort_order'}%>&RowsPerPage=<%$session{'tickets_rows_per_page'}%>"><&|/l&>Bookmarkable URL for this search</&></a>
+% }
+</TD>
+<TD align="right" rowspan="2">
+<& PickRestriction, %ARGS &>
+</TD>
+</TR>
+<TR>
+<TD VALIGN="BOTTOM">
+<INPUT TYPE="SUBMIT" NAME="NewSearch" VALUE="<&|/l&>New search</&>">
+</TD>
+</TR>
+</TABLE>
+
+% if (!$NoUI) {
+<& /Work/Elements/104Footer &>
+% }
+
+<%INIT>
+my ($title, $ticketcount);
+$session{'i'}++;
+if ($session{'tickets'}) {
+    if ($ARGS{'DeleteRestriction'}) {
+	    $session{'tickets'}->DeleteRestriction($ARGS{'DeleteRestriction'});
+    }
+    if ( ($ARGS{'ClearRestrictions'}) || ($ARGS{'NewSearch'}) ) {
+	    $session{'tickets'}->ClearRestrictions;
+	}	
+}
+   ProcessSearchQuery(ARGS=>\%ARGS);
+   $session{'tickets'}->RedoSearch();
+   if ( $session{'tickets'}->DescribeRestrictions()) {
+       $ticketcount = $session{tickets}->CountAll();
+        $title = loc('Found [quant,_1,ticket]', $ticketcount);
+    } else {
+        $title = loc("Find tickets");
+   }
+</%INIT>
+<%CLEANUP>
+$session{'tickets'}->PrepForSerialization();
+</%CLEANUP>
+<%ARGS>
+$NoUI	=> 0
+$TicketRow => 'TicketRow'
+</%ARGS>

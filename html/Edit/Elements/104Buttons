@@ -1,0 +1,88 @@
+%# "I was gratified to be able to answer promptly, and I did.  I said I
+%# didn't know."
+%#		-- Mark Twain
+  <tr>
+    <td> 
+      <table width="97%" border="0" cellspacing="2" cellpadding="0" align="center">
+              <tr> 
+% while (my($k, $v) = splice(@$Buttons, 0, 2)) {
+%     if ($v) {
+                <td
+% if ($RT::IsMSIE) {
+onmouseover="
+this.style.borderLeftColor = this.style.borderTopColor = 'white';
+this.style.borderRightColor = this.style.borderBottomColor = 'black';
+"
+onmouseout="
+this.style.borderLeftColor = this.style.borderTopColor =
+this.style.borderRightColor = this.style.borderBottomColor = '#C4E1F0';
+"
+% }
+		class="button" align="center" onclick="
+% if ($k eq 'Delete' and $v eq '1') {
+if ( checkDelete() ) {
+    if ( confirm('<&|/l&>Are you sure to delete checked items?</&>') ) {
+	document.getElementById('Action-Delete0').value = 1;
+	document.getElementById('mainform').submit();
+    }
+}
+else {
+    alert('<&|/l&>Please check items to be deleted first.</&>');
+}
+     ">
+     <input type="hidden" name="Action-Delete0" id="Action-Delete0" value="">
+     <noscript>
+     <input name="Action-Delete1" type="image" alt="[<% loc($k) %>]" src="/img/top<% $k %>.png"><br>
+     <input name="Action-Delete2" type="submit" value="<% loc($k) %>">
+     </noscript><script><!--
+document.write('<img alt="[<% loc($k) %>]" src="/img/top<% $k %>.png" ><br><% loc($k) %>');
+--></script>
+     </td>
+% } elsif ($v =~ /^javascript:(.+)/) {
+%    $m->print($1);
+     "><noscript>
+     <input type="image" alt="[<% loc($k) %>]" src="/img/top<% $k %>.png"><br>
+     <input type="submit" value="<% loc($k) %>">
+     </noscript><script><!--
+document.write('<img alt="[<% loc($k) %>]" src="/img/top<% $k %>.png" ><br><% loc($k) %>');
+--></script>
+     </td>
+% } else {
+%    $m->print("location.href='$v'");
+     "><noscript><a href="<% $v %>"></noscript><img alt="[<% loc($k) %>]" src="/img/top<% $k %>.png" ><br><% loc($k) %><noscript></a></noscript></td>
+% }
+%     } else {
+                <td class="disabled_button"><img alt="[<% loc($k) %>]" src="/img/top<% $k %>Disabled.png" ><br><% loc($k) %></td>
+%     }
+% }
+		<td>&nbsp;
+%     if ($RT::OIN104 and my $portal_url = $session{'PortalURL'}) {
+%     chop($portal_url) if $portal_url =~ m{/$};
+	    <img src="<% $portal_url %>/eWorkflow/SessionContinuance.asp" width="1" height="1">
+%     }
+		</td>
+              </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+<%INIT>
+if (my $extra = $RT::ButtonsBefore) {
+    unshift @$Buttons, @$extra;
+    undef $RT::ButtonsBefore;
+}
+if (my $extra = $RT::ButtonsAfter) {
+    push @$Buttons, @$extra;
+    undef $RT::ButtonsAfter;
+}
+</%INIT>
+<%ARGS>
+$Buttons => []
+# loc('Add')
+# loc('Save')
+# loc('Delete')
+# loc('Copy')
+# loc('Search')
+# loc('Import')
+# loc('Export')
+</%ARGS>

@@ -1,0 +1,24 @@
+%# Got Mole problems?
+%# Call Avogadro 6.02 x 10^23
+
+<label><input type="radio" name="<% $Name %>" <% $disabled %> value=""
+    <% !$Value and 'checked' %>><&|/l&>Writable</&></label>
+<label><input type="radio" name="<% $Name %>" <% $disabled %> value="readonly"
+    <% $Value eq 'readonly' and 'checked' %>><&|/l&>Read Only</&></label>
+<label><input type="radio" name="<% $Name %>" <% $disabled %> value="hidden"
+    <% $Value eq 'hidden' and 'checked' %>><&|/l&>Hidden</&></label>
+
+<%INIT>
+my $disabled = '';
+my $Value = 'disabled';
+if (!$Item->Type) {
+    $disabled = 'disabled';
+}
+else {
+    $Value = $Item->Attribute($Name);
+}
+</%INIT>
+<%ARGS>
+$Item
+$Name
+</%ARGS>

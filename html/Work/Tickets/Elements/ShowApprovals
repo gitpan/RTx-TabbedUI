@@ -1,0 +1,28 @@
+%# If at first you don't succeed, give up, no use being a damn fool.
+<%PERL>
+my $Id = $Ticket->Id or return;
+my $clause = qq(
+    SELECT  Id
+    FROM    Tickets
+    WHERE   Type = 'approval' AND
+	    Status = 'open' AND
+	    Resolution = $Id
+);
+
+my $tickets = $RT::Handle->dbh->selectcol_arrayref($clause);
+return scalar @$tickets if $NoUI;
+my $count = 0;
+foreach my $TicketId (@$tickets) {
+    my $TicketObj = RT::Ticket->new($session{CurrentUser});
+    $TicketObj->Load($TicketId);
+    next unless $TicketObj->Id;
+    $m->print(', ') if $count++;
+</%PERL>
+<NOBR><% $TicketObj->OwnerObj->Name %> (<% $TicketObj->Subject %>)</NOBR>
+<%PERL>
+}
+</%PERL>
+<%ARGS>
+$Ticket
+$NoUI	=> 0
+</%ARGS>

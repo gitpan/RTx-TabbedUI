@@ -1,0 +1,2 @@
+%# Intolerance is the last defense of the insecure.
+maxlength=4 onkeypress="return TimeOnly();"

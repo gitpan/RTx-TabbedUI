@@ -1,0 +1,176 @@
+%# They spell it "da Vinci" and pronounce it "da Vinchy".  Foreigners
+%# always spell better than they pronounce.
+%#		-- Mark Twain
+
+% if (!$NoUI) {
+<& /Work/Elements/104Header, Title => 'My Requests', Method => 'GET', Action => 'Update.html' &>
+% }
+<INPUT TYPE="HIDDEN" NAME="id" VALUE="<% $Ticket->Id %>">
+<INPUT TYPE="HIDDEN" NAME="Role" VALUE="<% $Role %>">
+
+<& /Work/Tickets/Elements/ShowQueue, QueueObj => $Ticket->QueueObj, TicketObj => $Ticket &>
+<& /Work/Tickets/Elements/ShowSummary, Ticket => $Ticket, Loc => $Loc &>
+
+% if (!$RT::OIN104) {
+<tr> 
+  <td bgcolor="#333333" height="2" colspan="2"></td>
+</tr>
+<tr><td style="padding: 0; padding-top: 4; padding-left: 2" colspan=2>
+<& /Edit/Elements/Tabs,
+    url => 'Display.html',
+    Map => [
+	'' => "&id=" . $Ticket->Id . "&Role=$Role&Queue=" . $Ticket->Queue,
+	map { $_ => $_ } qw(History), (
+	    ($Role ne 'guest' and $Ticket->CurrentUserHasRight('ModifyTicket'))
+		? qw(Basics People Links) : ()
+	)
+    ],
+    Show => $Show &>
+</td></tr>
+% }
+<%PERL>
+$m->comp("/Work/Tickets/Elements/Edit$Show",
+      %ARGS,
+      Ticket => $Ticket, 
+      PrivilegedOnly => 1,
+      Collapsed => $ARGS{'Collapsed'}, 
+      ShowHeaders => $ARGS{'ShowHeaders'},
+      ShowTitleBarCommands => ($RT::OIN104 ? 0 : $ShowTitleBarCommands));
+</%PERL>
+
+</td></tr></table>
+            <div align="center"> 
+              <br>
+              <table border="0" cellspacing="2" cellpadding="0" width="100%" align="center">
+		  <tr><td align='center'>
+% if (!$NoUI) {
+		  <& /Work/Elements/BackButton &>
+% }
+% if ($Role ne 'guest') {
+% if ($Role eq 'owner' and $Ticket->Status ne 'open') {
+		  <input class="answer" type="submit" border="0" name="Action-Open" value="  <&|/l&>Open</&>  ">
+% }
+% if ($CanRespond) {
+		  <input class="answer" type="submit" border="0" name="Action-Respond" value=" <&|/l&>Reply</&>... ">
+% }
+% if ($Role eq 'owner') {
+		  <input class="answer" type="submit" border="0" name="Action-Resolve" value=" <&|/l&>Resolve</&>... ">
+% }
+% if ($CanComment) {
+		  <input class="answer" type="submit" border="0" name="Action-Comment" value=" <&|/l&>Comment</&>... ">
+% }
+% }
+		    <br><br>
+                  </td>
+                </tr>
+              </table>
+	    </td>
+	</tr>
+    </table>
+</td></tr></table>
+</form> 
+<%INIT>
+$ARGS{Subject} = $ARGS{Subject}[-1] if ref $ARGS{Subject};
+
+my ($linkid, $message, $tid, $Ticket, @Actions);  
+
+$Ticket = new RT::Ticket($session{'CurrentUser'});
+
+unless ($id) {
+    Abort('No ticket specified');
+}
+
+if ($ARGS{'id'} eq 'new') {
+    # {{{ Create a new ticket
+    
+    my $Queue = new RT::Queue($session{'CurrentUser'});	
+    unless ($Queue->Load($ARGS{'Queue'})) {
+	Abort('Queue not found');
+    }
+    
+    unless ($Queue->CurrentUserHasRight('CreateTicket')) {
+	Abort('You have no permission to create tickets in that queue.');
+    }
+
+    ($Ticket, @Actions) =
+       CreateTicket(%ARGS, Attachments => $session{'Attachments'});
+    $m->notes(NewTicketId => $Ticket->Id);
+    delete $session{'Attachments'};
+    unless ($Ticket->CurrentUserHasRight('ShowTicket')) {
+      Abort("No permission to view newly created ticket #".$Ticket->id.".");
+    }
+    # }}}
+}
+
+else { 
+    $Ticket = LoadTicket($ARGS{'id'});
+    unless ($Ticket->CurrentUserHasRight('ShowTicket')) {
+	Abort("No permission to view ticket");
+    }
+    $Role = 'guest' if $Ticket->HasUnresolvedDependencies;
+
+if (defined $ARGS{'Action'}) {
+  if ($ARGS{'Action'} =~ /^(Steal|Kill|Take|SetTold)$/) {
+    my $action = $1;
+    my ($res, $msg)=$Ticket->$action();
+    push(@Actions, $msg);
+  }
+}
+
+    if ( $ARGS{'UpdateContent'} || $session{'Attachments'}) {
+        $ARGS{'UpdateContent'} =~ s/\r\n/\n/g;
+        if ( $session{'Attachments'} || 
+	     (   $ARGS{'UpdateContent'} ne ''
+		 && $ARGS{'UpdateContent'} ne "-- \n"
+		 . $session{'CurrentUser'}->UserObj->Signature )) {
+            $ARGS{UpdateAttachments} = $session{'Attachments'};
+	    $ARGS{UpdateType} ||= 'private';
+            ProcessUpdateMessage( ARGSRef   => \%ARGS,
+                                  Actions   => \@Actions,
+                                  TicketObj => $Ticket );
+            delete $session{'Attachments'};
+        }
+    }
+#Process status updates
+my @BasicActions = ProcessTicketBasics(ARGSRef => \%ARGS, TicketObj=>$Ticket);
+my @results = ProcessTicketLinks( TicketObj => $Ticket, ARGSRef => \%ARGS);                            
+
+push (@Actions, @BasicActions, @results);
+}
+
+my $CanRespond = (
+    ($Role eq 'owner' or $Role eq 'approver') and
+    $Ticket->CurrentUserHasRight('ReplyToTicket')
+);
+my $CanComment = (
+    ($Role ne 'guest' and $Ticket->Status =~ /open|new|stalled/) and
+    $Ticket->CurrentUserHasRight('CommentOnTicket')
+);
+
+if (!defined $ShowTitleBarCommands) {
+    if ($CanRespond and $CanComment) {
+	$ShowTitleBarCommands = 1;
+    }
+    elsif ($CanRespond) {
+	$ShowTitleBarCommands = 'RespondOnly';
+    }
+    elsif ($CanComment) {
+	$ShowTitleBarCommands = 'CommentOnly';
+    }
+    else {
+	$ShowTitleBarCommands = 0;
+    }
+}
+
+</%INIT>
+<%ARGS>
+$id => undef
+$Role => 'owner'
+$Create => undef
+$ShowHeaders => undef
+$ShowTitleBarCommands => undef
+$Collapsed => undef
+$NoUI => 0
+$Loc => 0
+$Show => 'History',
+</%ARGS>
